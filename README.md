@@ -7,5 +7,4 @@ The 1st project for the Artificial Intelligence class of Aerospace Engineering -
 
 Project by:
 
-Emanuel Fernandes
-João Louro
+Emanuel Fernandes and João Louro
