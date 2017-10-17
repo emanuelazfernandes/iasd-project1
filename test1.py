@@ -5,6 +5,8 @@
 #    Test file for the structures to be used in the project
 #  
 
+from itertools import combinations
+
 # Vertices of the graph - aux/redundant, maybe delete
 V = {
 	'CM': 20.4,
@@ -52,6 +54,30 @@ for (e1,e2) in E:
 G = {}
 
 for g in V:
-	G[g] = (V[g], E_aux[g].__len__(), E_aux[g])
+  G[g] = (V[g], E_aux[g].__len__(), E_aux[g])
 	# G = {'comp_name':(weight_comp, number_edges, list_edges_from_E_aux)}
-print(G)
+#print(G)
+#print()
+#'''
+print('G = {\n NAME |   w    | edges |\tlist_edges')
+print('-----------------------------------------------------------')
+for key, content in G.items():
+  print('  '+key+':\t('+str(content[0])+',\t   '+str(content[1])+'\t[',end = '')
+  for nc in range(0, content[1]):
+    if nc == content[1]-1:#para não imprimir a virgula no final
+      print("'"+str(content[2][nc])+"'])")
+    else:
+      print("'"+str(content[2][nc])+"',",end = "")
+print('}\n')
+#'''
+
+
+#testing node creation possibilities
+print("possible combinations: ")
+for k in range(1,V.__len__()+1):
+  print(k,end = ': ')
+  print(list(combinations(V.keys(),k)))
+  print()
+print()
+#agora adiciona a parte em que vai eliminar os que nao sao edges!
+#OU: PENSA NUMA MANEIRA DE GERAR MENOS CENAS DESTAS USANDO A LISTA DE EDGES!
