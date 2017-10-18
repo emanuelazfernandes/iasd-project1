@@ -5,6 +5,27 @@
 #    Test file for the structures to be used in the project
 #  
 
+'''função provavelmente inútil......mas deixa ficar como template para quando tiveres de percorrer a lista
+#function that removes (del) a component from combinatory list
+def filter_component(list_comb,str_comp):
+  
+  print()
+  print("After "+str_comp+" filter:")
+  
+  for nc in reversed(range(0,list_comb.__len__())):
+    if str_comp in list_comb[nc]:
+      del(list_comb[nc])
+      nc = nc - 1#poupas 1 ciclo por cada eliminação!!!
+  
+  print(list_comb)
+  print(list_comb.__len__())
+'''
+
+
+
+
+
+
 from itertools import combinations
 
 # Vertices of the graph - aux/redundant, maybe delete
@@ -50,7 +71,7 @@ for (e1,e2) in E:
 	#print(E_aux[e1],E_aux[e2])
 #print(E_aux)
 
-# Graph creation
+# Graph creation - ESTA LISTA VAI SER NECESSÁRIA?!?!?!?!?!?!?! se sim, depois para remover cenas, vais ter de recorrer ao deepcopy..
 G = {}
 
 for g in V:
@@ -59,6 +80,7 @@ for g in V:
 #print(G)
 #print()
 #'''
+#print the G list in a more comprehensive manner
 print('G = {\n NAME |   w    | edges |\tlist_edges')
 print('-----------------------------------------------------------')
 for key, content in G.items():
@@ -72,12 +94,44 @@ print('}\n')
 #'''
 
 
-#testing node creation possibilities
-print("possible combinations: ")
-for k in range(1,V.__len__()+1):
-  print(k,end = ': ')
-  print(list(combinations(V.keys(),k)))
-  print()
+
+
+
+#METE ISTO NUMA FUNÇÃO, PORQUE VAI SER UTILIZADA SEMPRE QUE
+#QUISERMOS GERAR AS COMBINAÇÕES DOS QUE *NÃO* ESTÃO EM ÓRBITA
+
+# generation of all the possible launch components combinations
+comb = []
+
+print("possible combinations: ")#debug
+for k in range(0,V.__len__()+1):#DEPOIS MODIFICA AQUI O V, PARA SER UMA LISTA SÓ COM OS QUE NÃO ESTÃO EM ÓRBITA
+  #print(k,end = ': ')#debug
+  comb_aux = list(combinations(V.keys(),k))#DEPOIS MODIFICA AQUI O V, PARA SER UMA LISTA SÓ COM OS QUE NÃO ESTÃO EM ÓRBITA
+  for j in range(0,comb_aux.__len__()):#para meter todos na mesma lista...
+    sum_weights = 0
+    for w in comb_aux[j]:
+      sum_weights = sum_weights + V[w]#sum the weights of the combination, DEIXA FICAR O V, POIS É O DICT ORIGINAL
+    comb.append((comb_aux[j],sum_weights))
+  #print(comb_aux)#debug
+  #print(comb_aux.__len__())#debug
+  #print()#debug
+#print()#debug
+print(comb)
+print(comb.__len__())
+
+
+
+
+
+
+
+
+
+# agora vamos remover os que, caso sejam enviados, vão ficar desconectados...
+
 print()
-#agora adiciona a parte em que vai eliminar os que nao sao edges!
-#OU: PENSA NUMA MANEIRA DE GERAR MENOS CENAS DESTAS USANDO A LISTA DE EDGES!
+print("After edge filter:")
+
+
+#FrItArIa
+#vá lá que os edges só contêm 2 elementos, assim no if só tens de testar 2 condições (ordem do edge)
