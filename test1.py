@@ -135,3 +135,24 @@ print("After edge filter:")
 
 #FrItArIa
 #vá lá que os edges só contêm 2 elementos, assim no if só tens de testar 2 condições (ordem do edge)
+
+
+
+#mnheh, so far so good, agora tens de ver como fazes para ver se os que vão ser
+#lançados são edges dos que já lá estão em órbita! será que vale a pena, para o 1º, "ser edge do vazio?"
+for cln in reversed(range(0,comb.__len__())):
+	comp_manifest = comb[cln][0]
+	print(comp_manifest)
+	for comp_aux_n in range(0,comp_manifest.__len__()-1):#cuidado com isto!
+		#pelo menos 1 edge! se não tiver, recursivamente, fora!
+		comp_aux = comp_manifest[comp_aux_n]
+		print(comp_aux)
+		print()
+		for next_comp in comp_manifest[comp_aux_n+1:]:
+			print(next_comp)
+		print()
+	print("\nNEXT!\n")
+
+	
+	
+	
