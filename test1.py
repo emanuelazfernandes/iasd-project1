@@ -21,12 +21,18 @@ def filter_component(list_comb,str_comp):
   print(list_comb.__len__())
 '''
 
+def filter_weight(list_comb, launch_weight):
+  for cwn in reversed(range(0,comb.__len__())):
+    if list_comb[cwn][1] >= launch_weight:
+      del(list_comb[cwn])
+
 
 
 
 
 
 from itertools import combinations
+#from copy import deepcopy
 
 # Vertices of the graph - aux/redundant, maybe delete
 V = {
@@ -103,7 +109,7 @@ print('}\n')
 # generation of all the possible launch components combinations
 comb = []
 
-print("possible combinations: ")#debug
+#print("possible combinations: ")#debug
 for k in range(0,V.__len__()+1):#DEPOIS MODIFICA AQUI O V, PARA SER UMA LISTA SÓ COM OS QUE NÃO ESTÃO EM ÓRBITA
   #print(k,end = ': ')#debug
   comb_aux = list(combinations(V.keys(),k))#DEPOIS MODIFICA AQUI O V, PARA SER UMA LISTA SÓ COM OS QUE NÃO ESTÃO EM ÓRBITA
@@ -116,9 +122,10 @@ for k in range(0,V.__len__()+1):#DEPOIS MODIFICA AQUI O V, PARA SER UMA LISTA S�
   #print(comb_aux.__len__())#debug
   #print()#debug
 #print()#debug
+
 print(comb)
 print(comb.__len__())
-
+print()
 
 
 
@@ -128,13 +135,12 @@ print(comb.__len__())
 
 
 # agora vamos remover os que, caso sejam enviados, vão ficar desconectados...
-
-print()
-print("After edge filter:")
+#print("Starting edge filter:")
 
 
 #FrItArIa
 #vá lá que os edges só contêm 2 elementos, assim no if só tens de testar 2 condições (ordem do edge)
+
 
 
 
@@ -143,16 +149,77 @@ print("After edge filter:")
 for cln in reversed(range(0,comb.__len__())):
 	comp_manifest = comb[cln][0]
 	print(comp_manifest)
-	for comp_aux_n in range(0,comp_manifest.__len__()-1):#cuidado com isto!
-		#pelo menos 1 edge! se não tiver, recursivamente, fora!
+	if comp_manifest.__len__() <= 1:
+	  continue
+	not_edge = True#se encontrar, passa a false
+	for comp_aux_n in range(0,comp_manifest.__len__()):
 		comp_aux = comp_manifest[comp_aux_n]
 		print(comp_aux)
+		#print()
+		for next_comp in comp_manifest[:comp_aux_n]+comp_manifest[comp_aux_n+1:]:
+		  print(next_comp)
+		  if next_comp in E_aux[comp_aux]:
+			  not_edge = False
+			  break#quando encontra, activa a flag e salta para fora para poupar ciclos
+			#else:
+			#  not_edge = True
+			#  break
 		print()
-		for next_comp in comp_manifest[comp_aux_n+1:]:
-			print(next_comp)
-		print()
+		#chegou ao fim: se nao encontrou, então a flag não foi alterada (False) e agora é remover este da lista!
+		if not_edge:#found one that's not connected to any of the others
+		  break#saves cycles
+	if not_edge:
+	  print("removingggggggggggggggggggggg: ", end = '')
+	  print(comb[cln])
+	  del(comb[cln])
+	else:
+	  print("yeah, all checks out")
 	print("\nNEXT!\n")
 
-	
-	
-	
+print("After edge filter:")
+print(comb)
+print(comb.__len__())
+print()
+
+
+
+
+
+
+filter_weight(comb,30.0)
+
+print("After weight fillter:")
+print(comb)
+print(comb.__len__())
+print()
+
+
+
+
+
+
+
+
+
+
+'''
+print()
+print()
+
+a = ("lol","pois","e","agora","crl")
+
+print(a)
+print()
+
+for b in range(0,a.__len__()):
+  print(b)
+  c = a[b]
+  print(c)
+  print()
+  for d in a[:b]+a[b+1:]:
+    print(d)
+  print()
+  print()
+'''
+
+
