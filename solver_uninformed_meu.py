@@ -3,8 +3,9 @@ import sys
 import time
 
 # User scripts
-from independent_meu import general_search
-from dependent_common_mau import *
+#from independent_meu import general_search
+from dependent_common_meu_try import *
+from library_uninformed_meu import *
 
 ###############################################################################
 # MAIN UNINFORMED
@@ -16,7 +17,7 @@ if len(sys.argv) != 3:
 file_name = sys.argv[2] # input file
 heuristic_info = sys.argv[1] # if it is informed or uninformed
 
-if sys.argv[1] =='-u'
+if sys.argv[1] =='-u':
     problem = read_file(file_name) # Problem statement
 
     strategy = {'search': uniform_cost, 'heuristic': uninformed_heuristic}
@@ -24,8 +25,8 @@ if sys.argv[1] =='-u'
     # uninformed_heuristic is a dummy function, it will always return 0
     # start_time = time.time()
 
-solution, cost = general_search(problem, strategy)
+#solution, cost = general_search(problem, strategy)
 
 # time = time.time() - start_time
 
-print (solution + str(cost))
+#print (solution + str(cost))

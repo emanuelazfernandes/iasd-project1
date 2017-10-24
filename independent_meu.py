@@ -11,7 +11,7 @@ from utility import *
 def general_search(problem, strategy):
 
     node = Node()                   # defining first node
-    node.state = problem.initial_state
+    node.state = 0                  # at the start, there is nothing in space
 
     frontier = [node]               # list of nodes on the frontier
     explored = []                   # list of nodes explored
