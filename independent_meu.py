@@ -12,7 +12,7 @@ def general_search(problem, strategy):
 
     node = Node()                   # defining first node
     #node.state = 0                  # at the start, there is nothing in space
-    # modifiquei a verificação do goal_check() para que isto funcionasse    
+    # modifiquei a verificação do goal_check() para que isto funcionasse
     # inicialização feita dentro do expand_node()
 
     frontier = [node]               # list of nodes on the frontier
@@ -53,7 +53,7 @@ def general_search(problem, strategy):
         print("depth_level =", node.state.depth_level)
         #vai adicionando aqui prints para ir fazendo debug...
         input("keypress")#debug
-
+        print("------------------------------------------------------------------------")
     n = len(explored) + 1 # expanded nodes
     print('n =', str(n))
 

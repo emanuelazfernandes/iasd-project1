@@ -262,13 +262,20 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     # acho que já fiz isto tudo que querias
 
     # generate all the possible combinations of components to launch
+
     con_list = generate_combinations(vertex_tl)
-
-    filter_edges(con_list,node_mother)
-
+    print("comb before filter")
+    print(len(con_list))
 
     #apply weight filter
     filter_weight(con_list, node_mother.state.launch.mp)
+    print("after weight filter")
+    print(len(con_list))
+
+    filter_edges(con_list,node_mother)
+    print("after edge filter")
+    print(len(con_list))
+
 
     # add new created nodes to frontier
     frontier_add_nodes(frontier, con_list, node_mother, vertex_tl, problem)
@@ -375,7 +382,7 @@ def filter_weight(list_comb, launch_weight):
     for cwn in reversed(range(0,len(list_comb))):
         if list_comb[cwn][1] >= launch_weight:
             del(list_comb[cwn])
-    print(list_comb)#debug
+    #print(list_comb)#debug
     print()#debug
 
 
