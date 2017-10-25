@@ -154,10 +154,10 @@ def read_file(file_name):
     print("\nlaunch: date mp fc vc")
     for l in l_list:
         print(l.date, l.mp, l.fc, l.vc)
-    print("\nproblem:")
+    #print("\nproblem:")
     #print(problem.initial_state, problem.goal_state)# initial_state comentado lá em cima.....
-    print(problem.goal_state)
-    print()
+    #print(problem.goal_state)
+    #print()
 
 
     return problem
@@ -261,12 +261,11 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #        v_list.remove(vertex)
     # acho que já fiz isto tudo que querias
 
-
     # generate all the possible combinations of components to launch
     con_list = generate_combinations(vertex_tl)
 
-    # apply edges filter
-    filter_edges(con_list, vertex_tl)
+    filter_edges(con_list,node_mother)
+
 
     #apply weight filter
     filter_weight(con_list, node_mother.state.launch.mp)
@@ -313,9 +312,31 @@ def generate_combinations(v_list):
     return list_comb
 
 
+
+
+
+
+
+def filter_edges(list_comb,node_mother):
+
+    possible_vertex=[]
+    for vertex in node_mother.state.present:
+        for conn in vertex.c:
+            if conn not in possible_vertex:
+                possible_vertex.append(conn)
+
+    for combin in list_comb:
+            if combin[0] not in possible_vertex:
+                list_comb.remove(combin)
+
+
+    return list_comb
+
+
+
 # function that filters the combinations generated, if at least 1 element
 # will be unconnected in orbit, except the first one
-def filter_edges(list_comb, v_list):
+def filter_edges_emanuel(list_comb, v_list):
 
     # create aux dict for edges
     list_E_aux = {}
@@ -341,7 +362,7 @@ def filter_edges(list_comb, v_list):
 
             if not_edge:# found one that's not connected to any of the others
                 break # save cycles
-        
+
         if not_edge:
             n_rem = n_rem + 1#debug
             del(list_comb[cln])
@@ -367,6 +388,7 @@ def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
         # populate state
         state_aux.present = node_mother.state.present # list of vertices present in space
         for pc in node_mother.state.manifest:# now with the parent ones!
+            #if pc not in state_aux.present:
             state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
 
         for v in v_list:

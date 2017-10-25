@@ -14,7 +14,7 @@ def uniform_cost(frontier):
     # search the frontier for the node with the minimum cost
     for n in frontier:
 
-        if n.g < min_g:
+        if n.g > min_g:
             min_g = n.g
             n_node = i
 
