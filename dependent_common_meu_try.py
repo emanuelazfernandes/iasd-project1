@@ -1,7 +1,7 @@
 # Python built-in libraries
-import sys
 import datetime
 from itertools import combinations
+import copy
 
 class Vertex:
 
@@ -221,7 +221,7 @@ def generate_answer(node):
 # Input: frontier, explored, node_mother, problem, strategy
 # Output: frontier, explored
 
-def expand_node(frontier, explored, node_mother, problem, strategy):
+def expand_node_emanuel(frontier, explored, node_mother, problem, strategy):
 
     if not node_mother.parent_node: # quer dizer que é o primeiro
         # inicializar o node_mother:
@@ -250,13 +250,13 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
         if vertex in node_mother.state.present: # if vertex in space, it cant be launched
             vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
-        ## list of the eligible vertex to launch
-        #if vertex.c not in con_list:
+        # list of the eligible vertex to launch
+        # if vertex.c not in con_list:
         #    con_list = con_list.append(vertex.c)
         # acho que isto aqui fica melhor com as funções que já tinha feito - não são bonitas mas funcionam =(
 
-    ## list with possible, launchable vertex
-    #for vertex in v_list:
+    # list with possible, launchable vertex
+    # for vertex in v_list:
     #    if vertex.ide not in con_list:
     #        v_list.remove(vertex)
     # acho que já fiz isto tudo que querias
@@ -284,7 +284,7 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
 # FUNÇÕES ADICIONADAS POR MIM - EMANUEL
 
 # aux function to generate all of the possible launch components combinations
-def generate_combinations(v_list):
+def generate_combinations_emanuel(v_list):
 
     #aqui somos obrigados a fazer isto assim por causa do combinations e sum_w
     list_V = {} # aux dict
@@ -315,7 +315,7 @@ def generate_combinations(v_list):
 
 # function that filters the combinations generated, if at least 1 element
 # will be unconnected in orbit, except the first one
-def filter_edges(list_comb, v_list):
+def filter_edges_emanuel(list_comb, v_list):
 
     # create aux dict for edges
     list_E_aux = {}
@@ -350,7 +350,7 @@ def filter_edges(list_comb, v_list):
 
 
 #function that filters list_comb based on available weight
-def filter_weight(list_comb, launch_weight):
+def filter_weight_emanuel(list_comb, launch_weight):
     for cwn in reversed(range(0,len(list_comb))):
         if list_comb[cwn][1] >= launch_weight:
             del(list_comb[cwn])
@@ -358,7 +358,7 @@ def filter_weight(list_comb, launch_weight):
     print()#debug
 
 
-def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
+def frontier_add_nodes_emanuel(frontier, list_comb, node_mother, v_list, problem):
 
     for c in list_comb: # c = ('manifest', sum_weight)
         node_aux = Node()
@@ -386,10 +386,164 @@ def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
 
 
 # function that calculates launch cost
-def calculate_cost(launch, manifest, sum_w):
+def calculate_cost_emanuel(launch, manifest, sum_w):
 
     sum_c = float(0)
     if manifest: #só entra aqui se tiver pelo menos 1! - verifica que funciona..
         sum_c = launch.fc + launch.vc*sum_w
 
     return sum_c
+
+
+########################################################################################################################
+def expand_node(frontier, explored, node_mother, problem, strategy):
+
+    if not node_mother.parent_node: # quer dizer que é o primeiro
+        # inicializar o node_mother:
+        node_mother.state.launch = problem.l_list[0]
+
+    vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
+
+    search = strategy['search']         # search algorithm to be implemented
+
+
+
+
+    # consider only unlaunched vertices/components
+    for vertex in problem.v_list:
+        if vertex in node_mother.state.present: # if vertex in space, it cant be launched
+            vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
+
+
+
+
+    # generate all the possible combinations of components to launch
+    combi_list = generate_combinations([],vertex_tl,[])
+
+    #still have to generate the empty payload combination
+
+    print(len(combi_list))
+
+    # apply weight filter
+    combi_list= filter_weight(combi_list, node_mother.state.launch.mp)
+
+    print(len(combi_list))
+
+
+    # apply edges filter
+    filter_edges(combi_list, node_mother)
+
+
+
+
+
+    # add new created nodes to frontier
+    frontier_add_nodes(frontier, combi_list, node_mother, problem)
+
+
+
+    # teoricamente, o explored aqui não é modificado...
+
+    return frontier, explored
+
+########################################################################################################################
+
+def generate_combinations(target,data,all_combinations):
+
+    for i in range(len(data)):
+        new_target = copy.copy(target)
+        new_data = copy.copy(data)
+        new_target.append(data[i])
+        new_data =data[i+1:]
+        all_combinations.append(new_target)
+        generate_combinations(new_target, new_data, all_combinations)
+
+    return all_combinations
+
+########################################################################################################################
+
+def filter_edges(combi_list,node_mother):
+    connect_list=[]
+    for vertex in node_mother.state.present:
+        print(type(vertex.c))
+        for connec in vertex.c:
+            print("connec")
+            if connec not in connect_list:
+                connect_list.append(connec)
+                print("o")
+
+
+    for combination in combi_list:
+        print("i")
+        for vertex2 in combination:
+            for connecti in vertex2.c:
+                if connecti not in connect_list:
+                    print("a")
+                    combi_list.remove(combination)
+                    continue
+            continue
+        continue
+
+
+ #   for combination in combi_list:
+ #       print(type(combination[0]))
+
+#    for i in range(0,len(combi_list)):
+#        print(type(combination))
+#        for vertex3 in range(0, len(combi_list(combination))):
+#            if vertex3 not in connect_list:
+#                combi_list.remove(combi_list(combination))
+
+    return combi_list
+
+########################################################################################################################
+
+def filter_weight(combi_list,launch_weight):
+
+    combi_weight=float(0)
+    for combination in combi_list:
+        for vertex in combination:
+            combi_weight+=vertex.w
+
+        if combi_weight>launch_weight:
+            combi_list.remove(combination)
+
+    return combi_list
+
+########################################################################################################################
+
+def frontier_add_nodes(frontier, combi_list, node_mother, problem):
+    combi=weight=float
+    for combi in combi_list:
+        combi_weight = float(0)
+        node_aux = Node()
+
+        node_aux.state.present=node_mother.state.present
+
+        for vertex in node_mother.state.manifest:
+            node_aux.state.present.append(vertex)
+
+        node_aux.manifest=combi
+
+        node_aux.state.depth_level=node_mother.state.depth_level + 1
+        node_aux.state.launch=problem.l_list[node_aux.state.depth_level]
+
+        for module in node_aux.manifest:
+            combi_weight+=module.w
+
+        node_aux.g = calculate_cost(node_aux.state.launch, node_aux.state.manifest, combi_weight)
+        node_aux.h = 0  # depois: node_aux.h = from_heuristic()
+        node_aux.parent_node = node_mother
+
+        frontier.append(node_aux)
+
+########################################################################################################################
+
+def calculate_cost(launch, manifest, launch_sum_w):
+
+    cost = float(0)
+    if manifest: #só entra aqui se tiver pelo menos 1! - verifica que funciona..
+        cost = launch.fc + launch.vc*launch_sum_w
+
+    return cost
+
