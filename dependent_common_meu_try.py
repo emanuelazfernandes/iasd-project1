@@ -422,25 +422,28 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
 
     #still have to generate the empty payload combination
 
-    print(len(combi_list))
 
-    # apply weight filter
+
+
+
     combi_list= filter_weight(combi_list, node_mother.state.launch.mp)
 
-    print(len(combi_list))
+    con_list = []
+    # apply weight filter
+    for combb in combi_list:
+        for vertice in combb:
+            combinacao=[]
+            combinacao.append(vertice)
+            con_list.append(combinacao)
 
 
     # apply edges filter
-    filter_edges(combi_list, node_mother)
-
-
+    #filter_edges(combi_list, node_mother)
 
 
 
     # add new created nodes to frontier
-    frontier_add_nodes(frontier, combi_list, node_mother, problem)
-
-
+    frontier_add_nodes_emanuel(frontier, con_list, node_mother,vertex_tl, problem)
 
     # teoricamente, o explored aqui não é modificado...
 
@@ -462,10 +465,15 @@ def generate_combinations(target,data,all_combinations):
 
 ########################################################################################################################
 
+
+
+
 def filter_edges(combi_list,node_mother):
     connect_list=[]
     for vertex in node_mother.state.present:
-        print(type(vertex.c))
+        if not node_mother.state.present:
+            break
+
         for connec in vertex.c:
             print("connec")
             if connec not in connect_list:
@@ -473,16 +481,16 @@ def filter_edges(combi_list,node_mother):
                 print("o")
 
 
-    for combination in combi_list:
-        print("i")
-        for vertex2 in combination:
-            for connecti in vertex2.c:
-                if connecti not in connect_list:
-                    print("a")
-                    combi_list.remove(combination)
-                    continue
-            continue
-        continue
+#    for combination in combi_list:
+#        print("i")
+#        for vertex2 in combination:
+#            for connecti in vertex2.c:
+#                if connecti not in connect_list:
+#                    print("a")
+#                    combi_list.remove(combination)
+#                    continue
+#            continue
+#        continue
 
 
  #   for combination in combi_list:
@@ -493,6 +501,7 @@ def filter_edges(combi_list,node_mother):
 #        for vertex3 in range(0, len(combi_list(combination))):
 #            if vertex3 not in connect_list:
 #                combi_list.remove(combi_list(combination))
+    combi_list = combi_list[:(len(combi_list)//2) - 1]
 
     return combi_list
 
@@ -513,10 +522,12 @@ def filter_weight(combi_list,launch_weight):
 ########################################################################################################################
 
 def frontier_add_nodes(frontier, combi_list, node_mother, problem):
-    combi=weight=float
+
     for combi in combi_list:
+        print("i")
         combi_weight = float(0)
         node_aux = Node()
+
 
         node_aux.state.present=node_mother.state.present
 
@@ -526,14 +537,18 @@ def frontier_add_nodes(frontier, combi_list, node_mother, problem):
         node_aux.manifest=combi
 
         node_aux.state.depth_level=node_mother.state.depth_level + 1
-        node_aux.state.launch=problem.l_list[node_aux.state.depth_level]
+        print(node_aux.state.depth_level)
+
+        node_aux.state.launch=problem.l_list[node_mother.state.depth_level]
 
         for module in node_aux.manifest:
-            combi_weight+=module.w
+            combi_weight += module.w
 
         node_aux.g = calculate_cost(node_aux.state.launch, node_aux.state.manifest, combi_weight)
         node_aux.h = 0  # depois: node_aux.h = from_heuristic()
         node_aux.parent_node = node_mother
+
+        print(len(frontier))
 
         frontier.append(node_aux)
 
@@ -546,4 +561,3 @@ def calculate_cost(launch, manifest, launch_sum_w):
         cost = launch.fc + launch.vc*launch_sum_w
 
     return cost
-

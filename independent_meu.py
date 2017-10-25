@@ -29,6 +29,7 @@ def general_search(problem, strategy):
             cost = int(0) # force it to be a single 0
             break
 
+
         node = choose_node(frontier, strategy) # Choose node to be explored
 
         goal = goal_check(node.state, problem)
@@ -51,6 +52,11 @@ def general_search(problem, strategy):
         else:
             print("")
         print("depth_level =", node.state.depth_level)
+        print(node.state.launch.date)
+        print("manifest")
+        print(node.state.manifest)
+        print("present")
+        print(node.state.present)
         #vai adicionando aqui prints para ir fazendo debug...
         input("keypress")#debug
 
