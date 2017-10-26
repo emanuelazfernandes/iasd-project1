@@ -212,14 +212,7 @@ def generate_answer(node):
     return s, cost
 
 
-###############################################################################
-# expand_node
-#   Expands all the possible nodes that are reachable from the current node.
-# Essential part of the program, taking into consideration all the constraints.
-# Only expands a certain node if is not on the frontier and explored list and,
-# in the case it is on the frontier list, chooses the one with the lowest cost.
-# Input: frontier, explored, node_mother, problem, strategy
-# Output: frontier, explored
+
 
 def expand_node(frontier, explored, node_mother, problem, strategy):
 
@@ -227,54 +220,52 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
         # inicializar o node_mother:
         node_mother.state.launch = problem.l_list[0]
 
+    print("MOTHER NODE")
+    print("Vertex in Space ", end="")
+
+    for vert1 in node_mother.state.present:
+        print(" ",vert1.ide, end="")
+
+    print("")
+    print("Cost ",node_mother.g)
+
+    print("Vertex to Launch ")
+    for vert2 in node_mother.state.manifest:
+        print(" ", vert2.ide, end="")
+
+
+
+
+
+
+
+
     vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
     #launch_av = problem.l_list # aqui não será preciso fazer deepcopy?
     search = strategy['search']         # search algorithm to be implemented
 
-
-    ## consider only launches that have not happened, and if a launch has happened ignore launches previous to that one
-    #for launch in problem.l_list:
-    #    if launch in node_mother.state.launches:
-    #        launch_av.remove(launch)#esperemos que ele aqui só remova deste local =X
-    #    if launch < max(node_mother.state.launch.date):
-    #        launch_av.remove(launch)#esperemos que ele aqui só remova deste local =X
-    # we now have a list of the launches we have available
-
-    # ele vai sempre escolher o 1.º, por isso acho que isto pode ser feito de melhor maneira...
-    # a minha sugestão é ir incrementando um contador de depth/nível,
-    # apagar a lista de launches do state e deixar só um launch por node,
-    # sendo que usamos esse contador para escolher o launch do problem.l_list
 
     # consider only unlaunched vertices/components
     for vertex in problem.v_list:
         if vertex in node_mother.state.present: # if vertex in space, it cant be launched
             vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
-        ## list of the eligible vertex to launch
-        #if vertex.c not in con_list:
-        #    con_list = con_list.append(vertex.c)
-        # acho que isto aqui fica melhor com as funções que já tinha feito - não são bonitas mas funcionam =(
 
-    ## list with possible, launchable vertex
-    #for vertex in v_list:
-    #    if vertex.ide not in con_list:
-    #        v_list.remove(vertex)
-    # acho que já fiz isto tudo que querias
-
-    # generate all the possible combinations of components to launch
 
     con_list = generate_combinations(vertex_tl)
-    print("comb before filter")
-    print(len(con_list))
+    #print("comb before filter")
+    #print(len(con_list))
+
+    con_list=filter_launched(con_list,node_mother,problem)
 
     #apply weight filter
     filter_weight(con_list, node_mother.state.launch.mp)
-    print("after weight filter")
-    print(len(con_list))
+    #print("after weight filter")
+    #print(len(con_list))
 
-    filter_edges(con_list,node_mother)
-    print("after edge filter")
-    print(len(con_list))
+    con_list=filter_edges(con_list,node_mother,problem)
+    #print("after edge filter")
+    #print(len(con_list))
 
 
     # add new created nodes to frontier
@@ -319,25 +310,53 @@ def generate_combinations(v_list):
     return list_comb
 
 
+def filter_launched(list_comb,node_mother,problem):
 
-
-
-
-
-def filter_edges(list_comb,node_mother):
+    space_vert=[]
+    for vert in node_mother.state.present:
+        space_vert.append(vert.ide)
 
     possible_vertex=[]
+    for verte in problem.v_list:
+        if verte.ide not in space_vert:
+            possible_vertex.append(verte.ide)
+
+
+    new_list=[]
+    for tuple_comb in list_comb:
+        for vert_str in tuple_comb[0]:
+            if vert_str in possible_vertex:
+                new_list.append(tuple_comb)
+
+        break
+
+    return new_list
+
+
+def filter_edges(list_comb,node_mother,problem):
+
+    possible_vertex=[]
+    if not node_mother.state.present:
+        for vertex in problem.v_list:
+            possible_vertex.append(vertex.ide)
+
+
     for vertex in node_mother.state.present:
         for conn in vertex.c:
             if conn not in possible_vertex:
                 possible_vertex.append(conn)
 
-    for combin in list_comb:
-            if combin[0] not in possible_vertex:
-                list_comb.remove(combin)
+    print("possible vert ",possible_vertex)
 
+    new_list=[]
+    for tuple_comb in list_comb:
+        for vert_str in tuple_comb[0]:
+            if vert_str in possible_vertex:
+                new_list.append(tuple_comb)
 
-    return list_comb
+        break
+
+    return new_list
 
 
 
@@ -395,19 +414,20 @@ def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
         # populate state
         state_aux.present = node_mother.state.present # list of vertices present in space
         for pc in node_mother.state.manifest:# now with the parent ones!
-            #if pc not in state_aux.present:
-            state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
+            if pc not in state_aux.present:
+                state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
 
         for v in v_list:
             if v.ide in c[0]:
-                state_aux.manifest.append(v)
+                if v not in state_aux.manifest:
+                    state_aux.manifest.append(v)
 
         state_aux.depth_level = node_mother.state.depth_level + 1
         state_aux.launch = problem.l_list[state_aux.depth_level-1]
 
         # populate node
         node_aux.state = state_aux
-        node_aux.g = calculate_cost(state_aux.launch, state_aux.manifest, c[1])
+        node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
         node_aux.h = 0 #depois: node_aux.h = from_heuristic()
         node_aux.parent_node = node_mother
 
@@ -418,7 +438,7 @@ def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
 def calculate_cost(launch, manifest, sum_w):
 
     sum_c = float(0)
-    if manifest: #só entra aqui se tiver pelo menos 1! - verifica que funciona..
-        sum_c = launch.fc + launch.vc*sum_w
+    #if manifest: #só entra aqui se tiver pelo menos 1! - verifica que funciona..
+    sum_c = launch.fc + launch.vc*sum_w
 
     return sum_c
