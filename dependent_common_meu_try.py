@@ -221,22 +221,24 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
         node_mother.state.launch = problem.l_list[0]
 
     print("-----------------------------------------")
-    print("MOTHER NODE")
-    print("Vertex in Space - ", end="")
-    for vert1 in node_mother.state.present:
-        print(" ",vert1.ide, end="")
-    print("")
-    print("Cost - ",node_mother.g)
-    print("Vertex to Launch - ",end="")
-    for vert2 in node_mother.state.manifest:
-        print(" ", vert2.ide, end="")
-    print("")
-    print("Launch - ", node_mother.state.launch.date,  node_mother.state.launch.mp)
-    print("")
-    print
+    if node_mother.state.depth_level>0:
+        print("MOTHER NODE")
+        print("Vertex in Space - ", end="")
+        for vert1 in node_mother.state.present:
+            print(" ",vert1.ide, end="")
+        print("")
+        print("Cost - ",node_mother.g)
+        print("Vertex to Launch - ",end="")
+        for vert2 in node_mother.state.manifest:
+            print(" ", vert2.ide, end="")
+        print("")
+        print("Launch - ", node_mother.state.launch.date,  node_mother.state.launch.mp)
+
     print("-----------------------------------------")
-
-
+    print("")
+    print("")
+    print("")
+    print("Launch - ", problem.l_list[node_mother.state.depth_level].date, problem.l_list[node_mother.state.depth_level].mp)
     vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
     #launch_av = problem.l_list # aqui não será preciso fazer deepcopy?
     search = strategy['search']         # search algorithm to be implemented
@@ -248,19 +250,37 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #        vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
 
+    vertex_tl=filter_manifest(vertex_tl,node_mother)
+    #print("after manifest filter - ",len(vertex_tl))
+    #for vert2 in vertex_tl:
+    #    print(" ", vert2.ide, end="")
+    #print(" ")
 
-    vertex_tl=filter_launched(vertex_tl,node_mother,problem)
-    print("after launched filter - ",len(vertex_tl))
+
+    vertex_tl=filter_launched(vertex_tl,node_mother)
+    #print("after launched filter - ",len(vertex_tl))
+    #or vert2 in vertex_tl:
+        #print(" ", vert2.ide, end="")
+
+    print(" ")
 
 
     vertex_tl=filter_edges(vertex_tl,node_mother,problem)
-    print("after edge filter - ", len(vertex_tl))
+    #print("after edge filter - ", len(vertex_tl))
+    for vert2 in vertex_tl:
+        print(" ", vert2.ide, end="")
 
+    print(" ")
     con_list = generate_combinations(vertex_tl)
-    print("comb  - ",len(con_list))
+    #print("comb  - ",len(con_list))
 
-    con_list=filter_weight(con_list, node_mother.state.launch.mp)
-    print("after weight filter - ",len(con_list))
+
+
+    con_list=filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
+    #print("after weight filter - ",len(con_list))
+
+    #for comb in con_list:
+    #    print(" ", comb, end="")
 
     #for comb in con_list:
     #    print(comb)
@@ -308,10 +328,21 @@ def generate_combinations(v_list):
     return list_comb
 
 
-def filter_launched(vertex_tl,node_mother,problem):
+def filter_manifest (vertex_tl,node_mother):
 
     possible_vertex=[]
-    for verte in problem.v_list:
+    for verte in vertex_tl:
+        if verte not in node_mother.state.manifest:
+            possible_vertex.append(verte)
+
+    return possible_vertex
+
+
+
+def filter_launched(vertex_tl,node_mother):
+
+    possible_vertex=[]
+    for verte in vertex_tl:
         if verte not in node_mother.state.present:
             possible_vertex.append(verte)
 
@@ -322,12 +353,15 @@ def filter_edges(vertex_tl,node_mother,problem):
 
     possible_vertex_conn_str=[]
 
-    for vertex in node_mother.state.present:
+    vertex_in_space=node_mother.state.present+node_mother.state.manifest
+
+
+    for vertex in vertex_in_space:
         for conn in vertex.c:
             if conn not in possible_vertex_conn_str:
                 possible_vertex_conn_str.append(conn)
 
-    if not node_mother.state.present:
+    if not vertex_in_space:
         possible_vertex_conn_str=[]
         for vertex in problem.v_list:
             possible_vertex_conn_str.append(vertex.ide)
@@ -337,6 +371,26 @@ def filter_edges(vertex_tl,node_mother,problem):
     for vertex in vertex_tl:
         if vertex.ide in possible_vertex_conn_str:
             possible_vertex.append(vertex)
+
+    unconected_list=[]
+    for vertex in problem.v_list:
+        unconected_list.append(vertex)
+
+    for vert in possible_vertex:
+        unconected_list.remove(vert)
+
+    print("UNCONECTED - ", end= " ")
+    for vertex in unconected_list:
+        print( vertex.ide, end=" ")
+    print(" ")
+    #    for vertex in unconected_list:
+    #        for conn in vertex.c:
+    #            if conn in possible_vertex:
+    #                possible_vertex.append(vertex)
+
+
+
+
 
 
     return possible_vertex
@@ -375,7 +429,9 @@ def frontier_add_nodes(frontier, list_comb, node_mother, problem):
         for vert_name in c[0]:
             for  verr in problem.v_list:
                 if verr.ide==vert_name:
+                    #print("a")
                     if verr not in node_mother.state.manifest:
+                        #print("b")
                         state_aux.manifest.append(verr)
 
         state_aux.depth_level = node_mother.state.depth_level + 1
