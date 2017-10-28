@@ -220,24 +220,18 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
         # inicializar o node_mother:
         node_mother.state.launch = problem.l_list[0]
 
+    print("-----------------------------------------")
     print("MOTHER NODE")
-    print("Vertex in Space ", end="")
-
+    print("Vertex in Space - ", end="")
     for vert1 in node_mother.state.present:
         print(" ",vert1.ide, end="")
-
     print("")
-    print("Cost ",node_mother.g)
-
-    print("Vertex to Launch ")
+    print("Cost - ",node_mother.g)
+    print("Vertex to Launch - ",end="")
     for vert2 in node_mother.state.manifest:
         print(" ", vert2.ide, end="")
-
-
-
-
-
-
+    print("")
+    print("-----------------------------------------")
 
 
     vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
@@ -252,24 +246,24 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
 
 
 
+    vertex_tl=filter_launched(vertex_tl,node_mother,problem)
+    print("after launched filter - ",len(vertex_tl))
+
+
+    vertex_tl=filter_edges(vertex_tl,node_mother,problem)
+    print("after edge filter - ", len(vertex_tl))
+
     con_list = generate_combinations(vertex_tl)
-    #print("comb before filter")
-    #print(len(con_list))
+    print("comb before filter - ",len(con_list))
 
-    con_list=filter_launched(con_list,node_mother,problem)
+    con_list=filter_weight(con_list, node_mother.state.launch.mp)
+    print("after weight filter - ",len(con_list))
 
-    #apply weight filter
-    filter_weight(con_list, node_mother.state.launch.mp)
-    #print("after weight filter")
-    #print(len(con_list))
 
-    con_list=filter_edges(con_list,node_mother,problem)
-    #print("after edge filter")
-    #print(len(con_list))
 
 
     # add new created nodes to frontier
-    frontier_add_nodes(frontier, con_list, node_mother, vertex_tl, problem)
+    frontier_add_nodes(frontier, con_list, node_mother,  problem)
 
     # teoricamente, o explored aqui não é modificado...
 
@@ -310,53 +304,38 @@ def generate_combinations(v_list):
     return list_comb
 
 
-def filter_launched(list_comb,node_mother,problem):
-
-    space_vert=[]
-    for vert in node_mother.state.present:
-        space_vert.append(vert.ide)
+def filter_launched(vertex_tl,node_mother,problem):
 
     possible_vertex=[]
     for verte in problem.v_list:
-        if verte.ide not in space_vert:
-            possible_vertex.append(verte.ide)
+        if verte not in node_mother.state.present:
+            possible_vertex.append(verte)
+
+    return possible_vertex
 
 
-    new_list=[]
-    for tuple_comb in list_comb:
-        for vert_str in tuple_comb[0]:
-            if vert_str in possible_vertex:
-                new_list.append(tuple_comb)
+def filter_edges(vertex_tl,node_mother,problem):
 
-        break
-
-    return new_list
-
-
-def filter_edges(list_comb,node_mother,problem):
-
-    possible_vertex=[]
-    if not node_mother.state.present:
-        for vertex in problem.v_list:
-            possible_vertex.append(vertex.ide)
-
+    possible_vertex_conn_str=[]
 
     for vertex in node_mother.state.present:
         for conn in vertex.c:
-            if conn not in possible_vertex:
-                possible_vertex.append(conn)
+            if conn not in possible_vertex_conn_str:
+                possible_vertex_conn_str.append(conn)
 
-    print("possible vert ",possible_vertex)
+    if not node_mother.state.present:
+        possible_vertex_conn_str=[]
+        for vertex in problem.v_list:
+            possible_vertex_conn_str.append(vertex.ide)
 
-    new_list=[]
-    for tuple_comb in list_comb:
-        for vert_str in tuple_comb[0]:
-            if vert_str in possible_vertex:
-                new_list.append(tuple_comb)
+    possible_vertex=[]
 
-        break
+    for vertex in vertex_tl:
+        if vertex.ide in possible_vertex_conn_str:
+            possible_vertex.append(vertex)
 
-    return new_list
+
+    return possible_vertex
 
 
 
@@ -393,6 +372,7 @@ def filter_edges_emanuel(list_comb, v_list):
             n_rem = n_rem + 1#debug
             del(list_comb[cln])
 
+
     #print("\nTotal invalid combinations removed:",n_rem,"out of",prev_size,"\n")#debug
 
 
@@ -403,9 +383,10 @@ def filter_weight(list_comb, launch_weight):
             del(list_comb[cwn])
     #print(list_comb)#debug
     print()#debug
+    return(list_comb)
 
 
-def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
+def frontier_add_nodes(frontier, list_comb, node_mother, problem):
 
     for c in list_comb: # c = ('manifest', sum_weight)
         node_aux = Node()
@@ -417,7 +398,7 @@ def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
             if pc not in state_aux.present:
                 state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
 
-        for v in v_list:
+        for v in problem.v_list:
             if v.ide in c[0]:
                 if v not in state_aux.manifest:
                     state_aux.manifest.append(v)
