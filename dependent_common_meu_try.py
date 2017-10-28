@@ -231,6 +231,9 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     for vert2 in node_mother.state.manifest:
         print(" ", vert2.ide, end="")
     print("")
+    print("Launch - ", node_mother.state.launch.date,  node_mother.state.launch.mp)
+    print("")
+    print
     print("-----------------------------------------")
 
 
@@ -240,9 +243,9 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
 
 
     # consider only unlaunched vertices/components
-    for vertex in problem.v_list:
-        if vertex in node_mother.state.present: # if vertex in space, it cant be launched
-            vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
+    #for vertex in problem.v_list:
+    #    if vertex in node_mother.state.present: # if vertex in space, it cant be launched
+    #        vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
 
 
@@ -254,13 +257,14 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     print("after edge filter - ", len(vertex_tl))
 
     con_list = generate_combinations(vertex_tl)
-    print("comb before filter - ",len(con_list))
+    print("comb  - ",len(con_list))
 
     con_list=filter_weight(con_list, node_mother.state.launch.mp)
     print("after weight filter - ",len(con_list))
 
-
-
+    #for comb in con_list:
+    #    print(comb)
+    #print(con_list)
 
     # add new created nodes to frontier
     frontier_add_nodes(frontier, con_list, node_mother,  problem)
@@ -339,43 +343,6 @@ def filter_edges(vertex_tl,node_mother,problem):
 
 
 
-# function that filters the combinations generated, if at least 1 element
-# will be unconnected in orbit, except the first one
-def filter_edges_emanuel(list_comb, v_list):
-
-    # create aux dict for edges
-    list_E_aux = {}
-    for v in v_list:
-        list_E_aux[v.ide] = v.c
-
-    prev_size = len(list_comb)
-    n_rem = 0#debug
-    for cln in reversed(range(0, prev_size)):
-        comp_manifest = list_comb[cln][0]
-
-        if len(comp_manifest) <= 1: # remove all but first
-            continue
-        not_edge = True # flag to find edges
-        for comp_aux_n in range(0, len(comp_manifest)):
-
-            comp_aux = comp_manifest[comp_aux_n]
-
-            for next_comp in comp_manifest[:comp_aux_n]+comp_manifest[comp_aux_n+1:]:
-                if next_comp in list_E_aux[comp_aux]:
-                    not_edge = False
-                    break # if found, activate flag and break (save cycles)
-
-            if not_edge:# found one that's not connected to any of the others
-                break # save cycles
-
-        if not_edge:
-            n_rem = n_rem + 1#debug
-            del(list_comb[cln])
-
-
-    #print("\nTotal invalid combinations removed:",n_rem,"out of",prev_size,"\n")#debug
-
-
 #function that filters list_comb based on available weight
 def filter_weight(list_comb, launch_weight):
     for cwn in reversed(range(0,len(list_comb))):
@@ -394,21 +361,34 @@ def frontier_add_nodes(frontier, list_comb, node_mother, problem):
 
         # populate state
         state_aux.present = node_mother.state.present # list of vertices present in space
-        for pc in node_mother.state.manifest:# now with the parent ones!
+        for pc in node_mother.state.manifest:# now with the parent one
             if pc not in state_aux.present:
                 state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
 
-        for v in problem.v_list:
-            if v.ide in c[0]:
-                if v not in state_aux.manifest:
-                    state_aux.manifest.append(v)
+#        for v in problem.v_list:
+#            if v.ide in c[0]:
+#                if v not in state_aux.manifest:
+#                    if c[1] != 0:
+#                        if v not in node_mother.state.present:
+#                            state_aux.manifest.append(v)
+
+        for vert_name in c[0]:
+            for  verr in problem.v_list:
+                if verr.ide==vert_name:
+                    if verr not in node_mother.state.manifest:
+                        state_aux.manifest.append(verr)
 
         state_aux.depth_level = node_mother.state.depth_level + 1
         state_aux.launch = problem.l_list[state_aux.depth_level-1]
 
+        #print("state_aux.depth_level = ", state_aux.depth_level)
+        #print("node_mother.state.depth_level = ",node_mother.state.depth_level)
+
+
         # populate node
         node_aux.state = state_aux
         node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
+
         node_aux.h = 0 #depois: node_aux.h = from_heuristic()
         node_aux.parent_node = node_mother
 
