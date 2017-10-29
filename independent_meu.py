@@ -42,7 +42,7 @@ def general_search(problem, strategy):
             # Expand all possible nodes reachable from the current node
             frontier, explored = expand_node(frontier, explored, node, problem, strategy)
 
-            explored.append(node)   # node has now been explored
+            explored.append(copy.deepcopy(node))   # node has now been explored
             if node in frontier:
                 frontier.remove(node)
 

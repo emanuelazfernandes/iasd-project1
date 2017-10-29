@@ -1,6 +1,7 @@
 # Python built-in libraries
 import sys
 import datetime
+import copy
 from itertools import combinations
 
 class Vertex:
@@ -218,28 +219,31 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
 
     if not node_mother.parent_node: # quer dizer que é o primeiro
         # inicializar o node_mother:
-        node_mother.state.launch = problem.l_list[0]
+        node_mother.state.launch = copy.deepcopy(problem.l_list[0])
 
     print("-----------------------------------------")
-    if node_mother.state.depth_level>0:
+    node_print=copy.deepcopy(node_mother)
+    while node_print.parent_node:
         print("MOTHER NODE")
         print("Vertex in Space - ", end="")
-        for vert1 in node_mother.state.present:
+        for vert1 in node_print.state.present:
             print(" ",vert1.ide, end="")
         print("")
-        print("Cost - ",node_mother.g)
+        print("Cost - ",node_print.g)
         print("Vertex to Launch - ",end="")
-        for vert2 in node_mother.state.manifest:
+        for vert2 in node_print.state.manifest:
             print(" ", vert2.ide, end="")
         print("")
-        print("Launch - ", node_mother.state.launch.date,  node_mother.state.launch.mp)
-
+        print("Launch - ", node_print.state.launch.date,  node_print.state.launch.mp)
+        print("Depth - ",node_print.state.depth_level)
+        node_print=copy.deepcopy(node_print.parent_node)
+        print("---------")
     print("-----------------------------------------")
-    print("")
-    print("")
-    print("")
-    print("Launch - ", problem.l_list[node_mother.state.depth_level].date, problem.l_list[node_mother.state.depth_level].mp)
-    vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
+    #print("")
+    #print("")
+    #print("")
+    #print("Launch - ", problem.l_list[node_mother.state.depth_level].date, problem.l_list[node_mother.state.depth_level].mp)
+    vertex_tl = copy.deepcopy(problem.v_list) # aqui não será preciso fazer deepcopy?
     #launch_av = problem.l_list # aqui não será preciso fazer deepcopy?
     search = strategy['search']         # search algorithm to be implemented
 
@@ -250,23 +254,22 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #        vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
 
-    vertex_tl=filter_manifest(vertex_tl,node_mother)
-    #print("after manifest filter - ",len(vertex_tl))
-    #for vert2 in vertex_tl:
-    #    print(" ", vert2.ide, end="")
-    #print(" ")
-
-
     vertex_tl=filter_launched(vertex_tl,node_mother)
-    #print("after launched filter - ",len(vertex_tl))
-    #or vert2 in vertex_tl:
-        #print(" ", vert2.ide, end="")
+    print("after launched filter - ",len(vertex_tl))
+    for vert2 in vertex_tl:
+        print(" ", vert2.ide, end="")
+    print(" ")
 
+
+    vertex_tl=filter_manifest(vertex_tl,node_mother)
+    print("after manifest filter - ",len(vertex_tl))
+    for vert2 in vertex_tl:
+        print(" ", vert2.ide, end="")
     print(" ")
 
 
     vertex_tl=filter_edges(vertex_tl,node_mother,problem)
-    #print("after edge filter - ", len(vertex_tl))
+    print("after edge filter - ", len(vertex_tl))
     for vert2 in vertex_tl:
         print(" ", vert2.ide, end="")
 
@@ -282,9 +285,9 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #for comb in con_list:
     #    print(" ", comb, end="")
 
-    #for comb in con_list:
-    #    print(comb)
-    #print(con_list)
+    for comb in con_list:
+        if comb[1]==0:
+            con_list.remove(comb)
 
     # add new created nodes to frontier
     frontier_add_nodes(frontier, con_list, node_mother,  problem)
@@ -331,22 +334,24 @@ def generate_combinations(v_list):
 def filter_manifest (vertex_tl,node_mother):
 
     possible_vertex=[]
-    for verte in vertex_tl:
-        if verte not in node_mother.state.manifest:
-            possible_vertex.append(verte)
 
-    return possible_vertex
+    for verr in node_mother.state.manifest:
+        for verte in vertex_tl:
+            if verr.ide==verte.ide:
+                vertex_tl.remove(verte)
+
+    return vertex_tl
 
 
 
 def filter_launched(vertex_tl,node_mother):
 
-    possible_vertex=[]
-    for verte in vertex_tl:
-        if verte not in node_mother.state.present:
-            possible_vertex.append(verte)
+    for verr in node_mother.state.present:
+        for verte in vertex_tl:
+            if verr.ide==verte.ide:
+                vertex_tl.remove(verte)
 
-    return possible_vertex
+    return vertex_tl
 
 
 def filter_edges(vertex_tl,node_mother,problem):
@@ -377,12 +382,14 @@ def filter_edges(vertex_tl,node_mother,problem):
         unconected_list.append(vertex)
 
     for vert in possible_vertex:
-        unconected_list.remove(vert)
+        for verr in unconected_list:
+            if vert==verr:
+                unconected_list.remove(vert)
 
-    print("UNCONECTED - ", end= " ")
-    for vertex in unconected_list:
-        print( vertex.ide, end=" ")
-    print(" ")
+    #print("UNCONECTED - ", end= " ")
+    #for vertex in unconected_list:
+    #    print( vertex.ide, end=" ")
+    #print(" ")
     #    for vertex in unconected_list:
     #        for conn in vertex.c:
     #            if conn in possible_vertex:
@@ -414,7 +421,7 @@ def frontier_add_nodes(frontier, list_comb, node_mother, problem):
         state_aux = State()
 
         # populate state
-        state_aux.present = node_mother.state.present # list of vertices present in space
+        state_aux.present = copy.deepcopy(node_mother.state.present) # list of vertices present in space
         for pc in node_mother.state.manifest:# now with the parent one
             if pc not in state_aux.present:
                 state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
@@ -446,7 +453,7 @@ def frontier_add_nodes(frontier, list_comb, node_mother, problem):
         node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
 
         node_aux.h = 0 #depois: node_aux.h = from_heuristic()
-        node_aux.parent_node = node_mother
+        node_aux.parent_node = copy.deepcopy(node_mother)
 
         frontier.append(node_aux)
 
