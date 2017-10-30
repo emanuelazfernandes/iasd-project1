@@ -42,8 +42,8 @@ else:
         sys.exit(3)
 
 print("------------------------------------------------------------------------")
-solution, cost = general_search(problem, strategy)
+solution = general_search(problem, strategy)
 
 # time = time.time() - start_time
 
-print (solution + str(cost))
+print(solution)

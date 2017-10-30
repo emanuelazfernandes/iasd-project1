@@ -34,14 +34,14 @@ def general_search(problem, strategy):
         goal = goal_check(node.state, problem)
         print_state(node.state)
         if goal == 1:   # achieved goal
-            solution, cost = generate_answer(node)
+            solution = generate_answer(node)
             break
 
         else:           # goal not achieved: continue exploring
 
             # Expand all possible nodes reachable from the current node
             frontier, explored = expand_node(frontier, explored, node, problem, strategy)
-
+            
             explored.append(copy.deepcopy(node))   # node has now been explored
             if node in frontier:
                 frontier.remove(node)
@@ -52,9 +52,9 @@ def general_search(problem, strategy):
         #    print("")
         #print("depth_level =", node.state.depth_level)
         #vai adicionando aqui prints para ir fazendo debug...
-        input("keypress")#debug
+        #input("keypress")#debug
         #print("------------------------------------------------------------------------")
     n = len(explored) + 1 # expanded nodes
-    print('n =', str(n))
-    print("caralho!!!")
-    return solution, cost
+    print('\nn =', str(n))
+    print("chegou ao fim!!!\n")
+    return solution

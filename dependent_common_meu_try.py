@@ -189,6 +189,7 @@ def goal_check(state, problem):
     if len(state.present)+len(state.manifest) == problem.goal_state:
         goal = 1 # Every component in orbit!
         #adiciona aqui checks adicionais...
+        print("@ goal")
         print_state(state)
     return goal
 
@@ -200,18 +201,31 @@ def goal_check(state, problem):
 
 def generate_answer(node):
 
-    s = '' # solution string
-    cost = node.g # Total cost
-    mother_cost = cost
+    output = []
 
-    ###gera output, falta fazer
-    ## ok - é preciso percorrer agora o visited pela ordem correcta através dos
-    # node_mother, para fazer o backtrace e obter o caminho óptimo..
-    # depois inverter essa ordem e ir imprimindo o que é necessário no s,
-    # conforme o enunciado e os outputs do prof
+    print("\ngenerate_answer()")
 
-    return s, cost
+    node_print = node
 
+    output.append(str(node_print.g))
+
+    while node_print.parent_node:
+        if node_print.g > 0:
+            s = ''
+            s += node_print.state.launch.date.strftime("%d%m%Y")
+            s += " "*3
+            for v in node_print.state.manifest:
+                s += v.ide + " "
+            s += " "*2
+            cost_node = node_print.g - node_print.parent_node.g
+            s += str(cost_node)
+            output.append(s)
+        else:
+            output.append("(envio vazio)")
+        node_print = node_print.parent_node
+        #print("---------")
+
+    return '\n'.join(reversed(output))
 
 
 
@@ -254,21 +268,21 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #        vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
 
 
-    vertex_tl=filter_launched(vertex_tl,node_mother)
+    vertex_tl = filter_launched(vertex_tl,node_mother)
     #print("after launched filter - ",len(vertex_tl))
     #for vert2 in vertex_tl:
     #    print(" ", vert2.ide, end="")
     #print(" ")
 
 
-    vertex_tl=filter_manifest(vertex_tl,node_mother)
+    vertex_tl = filter_manifest(vertex_tl,node_mother)
     #print("after manifest filter - ",len(vertex_tl))
     #for vert2 in vertex_tl:
     #    print(" ", vert2.ide, end="")
     #print(" ")
 
 
-    vertex_tl=filter_edges(vertex_tl,node_mother,problem)
+    vertex_tl = filter_edges(vertex_tl,node_mother,problem)
     #print("after edge filter - ", len(vertex_tl))
     #for vert2 in vertex_tl:
     #    print(" ", vert2.ide, end="")
@@ -278,8 +292,10 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #print("comb  - ",len(con_list))
 
 
-    print(node_mother.state.depth_level, )
-    con_list=filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
+    print("before add_nodes(), depth_parent =", node_mother.state.depth_level)
+    print("                        g_parent =", node_mother.g)
+    print_frontier(frontier)
+    con_list = filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
     #print("after weight filter - ",len(con_list))
 
     #for comb in con_list:
@@ -290,7 +306,7 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
             con_list.remove(comb)
 
     # add new created nodes to frontier
-    frontier_add_nodes(frontier, con_list, node_mother,  problem)
+    frontier_add_nodes(frontier, explored, con_list, node_mother,  problem)
 
     # teoricamente, o explored aqui não é modificado...
 
@@ -414,7 +430,7 @@ def filter_weight(list_comb, launch_weight):
     return(list_comb)
 
 
-def frontier_add_nodes(frontier, list_comb, node_mother, problem):
+def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem):
 
     for c in list_comb: # c = ('manifest', sum_weight)
         node_aux = Node()
@@ -455,7 +471,11 @@ def frontier_add_nodes(frontier, list_comb, node_mother, problem):
         node_aux.h = 0 #depois: node_aux.h = from_heuristic()
         node_aux.parent_node = copy.deepcopy(node_mother)
 
-        frontier.append(node_aux)
+        #check if node is already in explored
+        if not in_explored(node_aux, explored):
+            frontier.append(node_aux)
+        else:#debug
+            print("node já presente, depois imprimo aqui a verificação................................................")#debug
 
 
 # function that calculates launch cost
@@ -480,3 +500,62 @@ def print_state(state):
     print("]")
     print("depth =", state.depth_level)
     print("date =", state.launch.date)
+    print()
+
+
+
+def print_frontier(frontier):
+    print("           frontier = { ", end = "")
+    for nf in frontier:
+        print("(", end = "")
+        print(str(nf.g) + ",", end = "")
+        print("[", end = "")
+        for vm in nf.state.manifest:
+            print(vm.ide + ",", end = "")
+        print("]", end = "")
+        print("[", end = "")
+        for vp in nf.state.present:
+            print(vp.ide + ",", end = "")
+        print("]", nf.state.depth_level, end = "")
+        print("), ", end = "")
+    print("}")
+
+
+
+
+def in_explored(node_aux, explored):
+    already_explored = False
+
+    for ne in explored:
+        if equal_nodes(node_aux, ne):
+            already_explored = True
+
+    return already_explored
+
+
+
+def equal_nodes(node1, node2):
+    are_equal = False
+
+
+    if set(node1.state.manifest) == set(node2.state.manifest) and \
+        set(node1.state.present) == set(node2.state.present):
+        are_equal = True
+
+    return are_equal
+
+'''
+    for vm1 in node1.state.manifest:
+        if vm1.ide not in node2.state.manifest:
+            return False
+
+    for vp1 in node1.state.present:
+        if vp1.ide not in node2.state.present:
+            return False
+'''
+
+
+
+
+
+
