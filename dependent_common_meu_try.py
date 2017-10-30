@@ -262,12 +262,6 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     search = strategy['search']         # search algorithm to be implemented
 
 
-    # consider only unlaunched vertices/components
-    #for vertex in problem.v_list:
-    #    if vertex in node_mother.state.present: # if vertex in space, it cant be launched
-    #        vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
-
-
     vertex_tl = filter_launched(vertex_tl,node_mother)
     #print("after launched filter - ",len(vertex_tl))
     #for vert2 in vertex_tl:
@@ -282,21 +276,17 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #print(" ")
 
 
-    vertex_tl = filter_edges(vertex_tl,node_mother,problem)
-    #print("after edge filter - ", len(vertex_tl))
-    #for vert2 in vertex_tl:
-    #    print(" ", vert2.ide, end="")
+    vertex_tl=filter_edges(vertex_tl,node_mother,problem)
 
     #print(" ")
     con_list = generate_combinations(vertex_tl)
     #print("comb  - ",len(con_list))
 
 
-    print("before add_nodes(), depth_parent =", node_mother.state.depth_level)
-    print("                        g_parent =", node_mother.g)
-    print_frontier(frontier)
     con_list = filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
     #print("after weight filter - ",len(con_list))
+
+
 
     #for comb in con_list:
     #    print(" ", comb, end="")
@@ -305,10 +295,15 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
         if comb[1]==0:
             con_list.remove(comb)
 
+    #con_list = filter_combinations(con_list)
+
+
     # add new created nodes to frontier
     frontier_add_nodes(frontier, explored, con_list, node_mother,  problem)
 
-    # teoricamente, o explored aqui não é modificado...
+    print("before add_nodes(), depth_parent =", node_mother.state.depth_level)
+    print("                        g_parent =", node_mother.g)
+    print_frontier(frontier)
 
     return frontier, explored
 
@@ -369,13 +364,37 @@ def filter_launched(vertex_tl,node_mother):
 
     return vertex_tl
 
+def filter_combinations(con_list, vertex_tl, problem):
+
+    vertex_in_space=node_mother.state.present+node_mother.state.manifest
+
+    for vertex in vertex_in_space:
+        for conn in vertex.c:
+            if conn not in possible_vertex_conn_str:
+                possible_vertex_conn_str.append(conn)
+
+    if not vertex_in_space:
+        possible_vertex_conn_str=[]
+        for vertex in problem.v_list:
+            possible_vertex_conn_str.append(vertex.ide)
+
+    for combi in con_list:
+        if len(combi[0])==1:
+            if combi[0] not in possible_vertex_conn_str:
+                con_list.remove(combi)
+
+
+
+
+
+
+
 
 def filter_edges(vertex_tl,node_mother,problem):
 
     possible_vertex_conn_str=[]
 
     vertex_in_space=node_mother.state.present+node_mother.state.manifest
-
 
     for vertex in vertex_in_space:
         for conn in vertex.c:
@@ -401,20 +420,6 @@ def filter_edges(vertex_tl,node_mother,problem):
         for verr in unconected_list:
             if vert==verr:
                 unconected_list.remove(vert)
-
-    #print("UNCONECTED - ", end= " ")
-    #for vertex in unconected_list:
-    #    print( vertex.ide, end=" ")
-    #print(" ")
-    #    for vertex in unconected_list:
-    #        for conn in vertex.c:
-    #            if conn in possible_vertex:
-    #                possible_vertex.append(vertex)
-
-
-
-
-
 
     return possible_vertex
 
@@ -553,9 +558,3 @@ def equal_nodes(node1, node2):
         if vp1.ide not in node2.state.present:
             return False
 '''
-
-
-
-
-
-
