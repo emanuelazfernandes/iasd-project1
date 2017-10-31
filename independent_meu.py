@@ -12,7 +12,7 @@ def general_search(problem, strategy):
 
     node = Node()                   # defining first node
     #node.state = 0                  # at the start, there is nothing in space
-    # modifiquei a verificação do goal_check() para que isto funcionasse    
+    # modifiquei a verificação do goal_check() para que isto funcionasse
     # inicialização feita dentro do expand_node()
 
     frontier = [node]               # list of nodes on the frontier
@@ -32,29 +32,35 @@ def general_search(problem, strategy):
         node = choose_node(frontier, strategy) # Choose node to be explored
 
         goal = goal_check(node.state, problem)
-
+        #print_state(node.state)
         if goal == 1:   # achieved goal
-            solution, cost = generate_answer(node)
+            solution = generate_answer(node)
             break
 
         else:           # goal not achieved: continue exploring
-
             # Expand all possible nodes reachable from the current node
             frontier, explored = expand_node(frontier, explored, node, problem, strategy)
+            
+            #explored.append(copy.deepcopy(node))   # node has now been explored
+            explored.append(node)
 
-            explored.append(node)   # node has now been explored
             if node in frontier:
                 frontier.remove(node)
+            '''
+            print("after this node removal:")
+            print_frontier(frontier)
+            input()
+            '''
 
-        if node.state.depth_level == 0:
-            print("1.º ciclo")
-        else:
-            print("")
-        print("depth_level =", node.state.depth_level)
+        #if node.state.depth_level == 0:
+        #    print("1.º ciclo")
+        #else:
+        #    print("")
+        #print("depth_level =", node.state.depth_level)
         #vai adicionando aqui prints para ir fazendo debug...
-        input("keypress")#debug
-
+        #input("keypress")#debug
+        #print("------------------------------------------------------------------------")
     n = len(explored) + 1 # expanded nodes
-    print('n =', str(n))
-
-    return solution, cost
+    print('\nn =', str(n))
+    print("chegou ao fim!!!\n")
+    return solution

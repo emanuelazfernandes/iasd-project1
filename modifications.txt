@@ -1,0 +1,21 @@
+independent_meu.py
++35
+#49-53
+-#55
+#56
++59
+
+dependent_common_meu_try.py
+99: (estava sem nada)
+100: # gets ordered version of the input file
+102: (estava sem nada)
+189: if len(state.present) == problem.goal_state:
++192
+#224-241
+#258-261
+#265-268
+#272-274
+#276
++281
+#413
++470-???

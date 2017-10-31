@@ -30,7 +30,7 @@ if sys.argv[1] =='-u':
     #fazer, se houver tempo...
     #strategy = {'search': backtracking, 'heuristic': uninformed_heuristic}
     #strategy = {'search': bidirectional, 'heuristic': uninformed_heuristic}
-    
+
 else:
     if sys.argv[1] =='-i':
         print("Depois aqui ele vai fazer o informed...")
@@ -41,8 +41,9 @@ else:
         #print("Usage: python solver.py -[u | i] <problem.txt>")
         sys.exit(3)
 
-solution, cost = general_search(problem, strategy)
+print("------------------------------------------------------------------------")
+solution = general_search(problem, strategy)
 
 # time = time.time() - start_time
 
-print (solution + str(cost))
+print(solution)

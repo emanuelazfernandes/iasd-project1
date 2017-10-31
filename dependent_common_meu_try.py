@@ -1,6 +1,7 @@
 # Python built-in libraries
 import sys
 import datetime
+import copy
 from itertools import combinations
 
 class Vertex:
@@ -95,10 +96,10 @@ def order_file(file_name):
 def read_file(file_name):
     v_list = []     # list of modules (Vertex) with the info of each module
     l_list = []     # list of launches (Launch)
-
-    # gets ordered version of the input file
+    l_aux = Launch()
+    l_aux.date = datetime.date(int(9999), int(12), int(31))
     ordered_file = order_file(file_name)
-
+    l_list.append(l_aux)
     for line in ordered_file:
 
         # removes '\n' character
@@ -154,10 +155,10 @@ def read_file(file_name):
     print("\nlaunch: date mp fc vc")
     for l in l_list:
         print(l.date, l.mp, l.fc, l.vc)
-    print("\nproblem:")
+    #print("\nproblem:")
     #print(problem.initial_state, problem.goal_state)# initial_state comentado lá em cima.....
-    print(problem.goal_state)
-    print()
+    #print(problem.goal_state)
+    #print()
 
 
     return problem
@@ -185,10 +186,11 @@ def choose_node(frontier, strategy):
 def goal_check(state, problem):
 
     goal = 0
-    if len(state.present) == problem.goal_state:
+    if len(state.present)+len(state.manifest) == problem.goal_state:
         goal = 1 # Every component in orbit!
         #adiciona aqui checks adicionais...
-
+        print("@ goal")
+        print_state(state)
     return goal
 
 ###############################################################################
@@ -199,82 +201,119 @@ def goal_check(state, problem):
 
 def generate_answer(node):
 
-    s = '' # solution string
-    cost = node.g # Total cost
-    mother_cost = cost
+    output = []
 
-    ###gera output, falta fazer
-    ## ok - é preciso percorrer agora o visited pela ordem correcta através dos
-    # node_mother, para fazer o backtrace e obter o caminho óptimo..
-    # depois inverter essa ordem e ir imprimindo o que é necessário no s,
-    # conforme o enunciado e os outputs do prof
+    print("\ngenerate_answer()")
 
-    return s, cost
+    node_print = node
+
+    output.append('{0:.6f}'.format(node_print.g))
+
+    while node_print.parent_node:
+        cost_node = node_print.g - node_print.parent_node.g
+        if cost_node != 0:
+            s = ''
+            s += node_print.state.launch.date.strftime("%d%m%Y")
+            s += " "*3
+            for v in node_print.state.manifest:
+                s += v.ide + " "
+            s += " "*2
+            s += str('{0:.6f}'.format(cost_node))
+            output.append(s)
+        #else:
+        #    output.append("(envio vazio)")
+        node_print = node_print.parent_node
+        #print("---------")
+
+    return '\n'.join(reversed(output))
 
 
-###############################################################################
-# expand_node
-#   Expands all the possible nodes that are reachable from the current node.
-# Essential part of the program, taking into consideration all the constraints.
-# Only expands a certain node if is not on the frontier and explored list and,
-# in the case it is on the frontier list, chooses the one with the lowest cost.
-# Input: frontier, explored, node_mother, problem, strategy
-# Output: frontier, explored
 
 def expand_node(frontier, explored, node_mother, problem, strategy):
 
     if not node_mother.parent_node: # quer dizer que é o primeiro
         # inicializar o node_mother:
+        #node_mother.state.launch = copy.deepcopy(problem.l_list[0])
         node_mother.state.launch = problem.l_list[0]
 
-    vertex_tl = problem.v_list # aqui não será preciso fazer deepcopy?
+    #print("-----------------------------------------")
+    #node_print=copy.deepcopy(node_mother)
+    #while node_print.parent_node:
+        #print("MOTHER NODE")
+        #print("Vertex in Space - ", end="")
+        #for vert1 in node_print.state.present:
+        #    print(" ",vert1.ide, end="")
+        #print("")
+        #print("Cost - ",node_print.g)
+        #print("Vertex to Launch - ",end="")
+        #for vert2 in node_print.state.manifest:
+        #    print(" ", vert2.ide, end="")
+        #print("")
+        #print("Launch - ", node_print.state.launch.date,  node_print.state.launch.mp)
+        #print("Depth - ",node_print.state.depth_level)
+        #node_print=copy.deepcopy(node_print.parent_node)
+        #print("---------")
+    #print("-----------------------------------------")
+    #print("")
+    #print("")
+    #print("")
+    #print("Launch - ", problem.l_list[node_mother.state.depth_level].date, problem.l_list[node_mother.state.depth_level].mp)
+    vertex_tl = copy.deepcopy(problem.v_list)# aqui ele precisa MESMO do deepcopy...
     #launch_av = problem.l_list # aqui não será preciso fazer deepcopy?
     search = strategy['search']         # search algorithm to be implemented
 
-
-    ## consider only launches that have not happened, and if a launch has happened ignore launches previous to that one
-    #for launch in problem.l_list:
-    #    if launch in node_mother.state.launches:
-    #        launch_av.remove(launch)#esperemos que ele aqui só remova deste local =X
-    #    if launch < max(node_mother.state.launch.date):
-    #        launch_av.remove(launch)#esperemos que ele aqui só remova deste local =X
-    # we now have a list of the launches we have available
-
-    # ele vai sempre escolher o 1.º, por isso acho que isto pode ser feito de melhor maneira...
-    # a minha sugestão é ir incrementando um contador de depth/nível,
-    # apagar a lista de launches do state e deixar só um launch por node,
-    # sendo que usamos esse contador para escolher o launch do problem.l_list
-
-    # consider only unlaunched vertices/components
-    for vertex in problem.v_list:
-        if vertex in node_mother.state.present: # if vertex in space, it cant be launched
-            vertex_tl.remove(vertex)#esperemos que ele aqui só remova deste local =X
-
-        ## list of the eligible vertex to launch
-        #if vertex.c not in con_list:
-        #    con_list = con_list.append(vertex.c)
-        # acho que isto aqui fica melhor com as funções que já tinha feito - não são bonitas mas funcionam =(
-
-    ## list with possible, launchable vertex
-    #for vertex in v_list:
-    #    if vertex.ide not in con_list:
-    #        v_list.remove(vertex)
-    # acho que já fiz isto tudo que querias
+    vertex_tl = filter_launched(vertex_tl, node_mother)
+    #print("after launched filter - ",len(vertex_tl))
+    #for vert2 in vertex_tl:
+    #    print(" ", vert2.ide, end="")
+    #print(" ")
+    
+    vertex_tl = filter_manifest(vertex_tl, node_mother)
+    #print("after manifest filter - ",len(vertex_tl))
+    #for vert2 in vertex_tl:
+    #    print(" ", vert2.ide, end="")
+    #print(" ")
 
 
-    # generate all the possible combinations of components to launch
+
+    #vertex_tl = filter_edges(vertex_tl, node_mother, problem)####################################################
+    #for vert2 in vertex_tl:
+    #    print(" ", vert2.ide, end="")
+    #print(" ")
+
     con_list = generate_combinations(vertex_tl)
+    
+    con_list = filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
+    #print("after weight filter - ",len(con_list))
 
-    # apply edges filter
-    filter_edges(con_list, vertex_tl)
 
-    #apply weight filter
-    filter_weight(con_list, node_mother.state.launch.mp)
+    #print(problem.l_list[node_mother.state.depth_level].mp)
+    #for comb in con_list:
+    #    print(" ", comb, end="")
+    '''
+    for comb in con_list:
+        if comb[1] == 0:
+            con_list.remove(comb)
+    '''
+    ########################con_list = filter_combinations(con_list, vertex_tl, node_mother, problem)
 
+    '''
+    print("node_g =", node_mother.g, end = ", ")
+    print("manifest =", end = "[")
+    for v in node_mother.state.manifest:
+        print(v.ide, end = ",")
+    print("]")
+    print("node_depth =", node_mother.state.depth_level)
+    print("before add_nodes():")
+    print_frontier(frontier)
+    '''
     # add new created nodes to frontier
-    frontier_add_nodes(frontier, con_list, node_mother, vertex_tl, problem)
-
-    # teoricamente, o explored aqui não é modificado...
+    frontier_add_nodes(frontier, explored, con_list, node_mother,  problem)
+    '''
+    print("after add_nodes(), but before this node removal:")
+    print_frontier(frontier)
+    '''
+    
 
     return frontier, explored
 
@@ -313,40 +352,60 @@ def generate_combinations(v_list):
     return list_comb
 
 
-# function that filters the combinations generated, if at least 1 element
-# will be unconnected in orbit, except the first one
-def filter_edges(list_comb, v_list):
+def filter_manifest(vertex_tl, node_mother):
 
-    # create aux dict for edges
-    list_E_aux = {}
-    for v in v_list:
-        list_E_aux[v.ide] = v.c
+    possible_vertex = []
 
-    prev_size = len(list_comb)
-    n_rem = 0#debug
-    for cln in reversed(range(0, prev_size)):
-        comp_manifest = list_comb[cln][0]
+    for verr in node_mother.state.manifest:
+        for verte in vertex_tl:
+            if verr.ide == verte.ide:
+                vertex_tl.remove(verte)
 
-        if len(comp_manifest) <= 1: # remove all but first
-            continue
-        not_edge = True # flag to find edges
-        for comp_aux_n in range(0, len(comp_manifest)):
+    return vertex_tl
 
-            comp_aux = comp_manifest[comp_aux_n]
 
-            for next_comp in comp_manifest[:comp_aux_n]+comp_manifest[comp_aux_n+1:]:
-                if next_comp in list_E_aux[comp_aux]:
-                    not_edge = False
-                    break # if found, activate flag and break (save cycles)
+def filter_launched(vertex_tl, node_mother):
 
-            if not_edge:# found one that's not connected to any of the others
-                break # save cycles
-        
-        if not_edge:
-            n_rem = n_rem + 1#debug
-            del(list_comb[cln])
+    for verr in node_mother.state.present:
+        for verte in vertex_tl:
+            if verr.ide == verte.ide:
+                vertex_tl.remove(verte)
 
-    #print("\nTotal invalid combinations removed:",n_rem,"out of",prev_size,"\n")#debug
+    return vertex_tl
+
+
+def filter_edges(vertex_tl, node_mother, problem):
+
+    possible_vertex_conn_str = []
+
+    vertex_in_space = node_mother.state.present + node_mother.state.manifest
+
+    for vertex in vertex_in_space:
+        for conn in vertex.c:
+            if conn not in possible_vertex_conn_str:
+                possible_vertex_conn_str.append(conn)
+
+    if not vertex_in_space:
+        possible_vertex_conn_str = []
+        for vertex in problem.v_list:
+            possible_vertex_conn_str.append(vertex.ide)
+
+    possible_vertex = []
+
+    for vertex in vertex_tl:
+        if vertex.ide in possible_vertex_conn_str:
+            possible_vertex.append(vertex)
+
+    unconected_list = []
+    for vertex in problem.v_list:
+        unconected_list.append(vertex)
+
+    for vert in possible_vertex:
+        for verr in unconected_list:
+            if vert == verr:
+                unconected_list.remove(vert)
+
+    return possible_vertex
 
 
 #function that filters list_comb based on available weight
@@ -354,42 +413,204 @@ def filter_weight(list_comb, launch_weight):
     for cwn in reversed(range(0,len(list_comb))):
         if list_comb[cwn][1] >= launch_weight:
             del(list_comb[cwn])
-    print(list_comb)#debug
-    print()#debug
+    #print(list_comb)#debug
+    #print()#debug
+    return(list_comb)
+
+'''
+def filter_combinations(con_list, vertex_tl, node_mother, problem):
+
+    outer_ring = []
+
+    for c_tup in con_list:
+        #c_tup = (['VK1','VS','VSTM'],6.9)
+        comb = c_tup[0]
+        #comb tem agora a lista de strings desta combinação => ['VK1','VS','VSTM']
+        if len(comb) < 2:
+            continue#só estamos interessados em eliminar aqueles que têm pelo menos 2 componentes, pois o objectivo aqui é verificar se vão ficar conectados no espaço...
+        for n_vide in range(0, len(comb)):
+            vide = comb[n_vide]
+            #vide contem agora o v.ide da comb => 'VK1'
+            for v_orig in problem.v_list#procurar os edges do VK1
+                if v_orig.ide == vide:
+                    edges = v_orig.c
+            #edges contem agora ['VPM','VCM'], uma lista de strings!!!
+            comb_others = comb[:n_vide] + comb[n_vide+1:]
+            #comb_others contem agora todos os outros da comb que não o vide => ['VS','VSTM']
+
+            for co in comb_others:
+                if co not in edges:
+                    blabla
+'''
+    #percorrer as combinações 1 por 1, e ver se há pelo menos 1 desconexão!
+    #se houver, essa combinação salta fora!
 
 
-def frontier_add_nodes(frontier, list_comb, node_mother, v_list, problem):
+'''
+    print(con_list)
+
+    possible_vertex_conn_str = []
+
+    vertex_in_space = node_mother.state.present + node_mother.state.manifest
+    for v in vertex_in_space:
+        print("     ", v.ide, end = "")
+    print("caralho")
+
+    for vertex in vertex_in_space:
+        for conn in vertex.c:
+            if conn not in possible_vertex_conn_str:
+                possible_vertex_conn_str.append(conn)
+    print(possible_vertex_conn_str)
+
+    if not vertex_in_space:
+        possible_vertex_conn_str=[]
+        for vertex in problem.v_list:
+            possible_vertex_conn_str.append(vertex.ide)
+    print(possible_vertex_conn_str)
+
+    for combi in con_list:
+        if len(combi[0])==1:
+            if combi[0] not in possible_vertex_conn_str:
+                con_list.remove(combi)
+    print(con_list)
+    input()
+    #até aqui, já filtrou .....
+
+    #for 
+
+    return con_list
+'''
+
+def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem):
 
     for c in list_comb: # c = ('manifest', sum_weight)
         node_aux = Node()
         state_aux = State()
 
         # populate state
-        state_aux.present = node_mother.state.present # list of vertices present in space
-        for pc in node_mother.state.manifest:# now with the parent ones!
-            state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
+        state_aux.present = copy.deepcopy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
+        for pc in node_mother.state.manifest:# now with the parent one
+            if pc not in state_aux.present:
+                state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
 
-        for v in v_list:
-            if v.ide in c[0]:
-                state_aux.manifest.append(v)
+#        for v in problem.v_list:
+#            if v.ide in c[0]:
+#                if v not in state_aux.manifest:
+#                    if c[1] != 0:
+#                        if v not in node_mother.state.present:
+#                            state_aux.manifest.append(v)
+
+        for vert_name in c[0]:
+            for  verr in problem.v_list:
+                if verr.ide==vert_name:
+                    #print("a")
+                    if verr not in node_mother.state.manifest:
+                        #print("b")
+                        state_aux.manifest.append(verr)
 
         state_aux.depth_level = node_mother.state.depth_level + 1
         state_aux.launch = problem.l_list[state_aux.depth_level-1]
 
+        #print("state_aux.depth_level = ", state_aux.depth_level)
+        #print("node_mother.state.depth_level = ",node_mother.state.depth_level)
+
+
         # populate node
         node_aux.state = state_aux
-        node_aux.g = calculate_cost(state_aux.launch, state_aux.manifest, c[1])
+        node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
+
         node_aux.h = 0 #depois: node_aux.h = from_heuristic()
+        #node_aux.parent_node = copy.deepcopy(node_mother)
         node_aux.parent_node = node_mother
 
+        '''
+        #check if node is already in explored
+        if not in_explored(node_aux, explored):
+            frontier.append(node_aux)
+        else:#debug
+            print("node já presente:")#debug
+            for ne in explored:
+                if set(node1.state.manifest) == set(node2.state.manifest) and \
+                    set(node1.state.present) == set(node2.state.present) and \
+                    node1.state.manifest and node2.state.manifest:
+        '''
+        # se calhar isto aqui em cima nem é necessário...
         frontier.append(node_aux)
 
 
 # function that calculates launch cost
 def calculate_cost(launch, manifest, sum_w):
 
-    sum_c = float(0)
-    if manifest: #só entra aqui se tiver pelo menos 1! - verifica que funciona..
+    if manifest:
         sum_c = launch.fc + launch.vc*sum_w
+    else:
+        sum_c = 0
 
     return sum_c
+
+
+def print_state(state):
+    print("node.state:")
+    print("present = [",end = "")
+    for vp in state.present:
+        print(vp.ide+",", end = "")
+    print("]")
+    print("manifest = [",end = "")
+    for vm in state.manifest:
+        print(vm.ide+",", end = "")
+    print("]")
+    print("depth =", state.depth_level)
+    print("date =", state.launch.date)
+    print()
+
+
+
+def print_frontier(frontier):
+    print("           frontier = { ", end = "")
+    for nf in frontier:
+        print("(", end = "")
+        print(str(nf.g) + ",", end = "")
+        print("[", end = "")
+        for vm in nf.state.manifest:
+            print(vm.ide + ",", end = "")
+        print("]", end = "")
+        print("[", end = "")
+        for vp in nf.state.present:
+            print(vp.ide + ",", end = "")
+        print("]", nf.state.depth_level, end = "")
+        print("), ", end = "")
+    print("}")
+
+
+
+
+def in_explored(node_aux, explored):
+    already_explored = False
+
+    for ne in explored:
+        if equal_nodes(node_aux, ne):
+            already_explored = True
+
+    return already_explored
+
+
+
+def equal_nodes(node1, node2):
+    are_equal = False
+
+    if set(node1.state.manifest) == set(node2.state.manifest) and \
+        set(node1.state.present) == set(node2.state.present) and \
+        node1.state.manifest and node2.state.manifest:
+        are_equal = True
+
+    return are_equal
+
+'''
+    for vm1 in node1.state.manifest:
+        if vm1.ide not in node2.state.manifest:
+            return False
+
+    for vp1 in node1.state.present:
+        if vp1.ide not in node2.state.present:
+            return False
+'''
