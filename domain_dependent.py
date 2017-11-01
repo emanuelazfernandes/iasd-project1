@@ -1,24 +1,26 @@
-# Python built-in libraries
 import sys
 import datetime
 import copy
 from itertools import combinations
 from solver_library import *
 
+################################################################################
+
 class Vertex:
 
     def __init__(self):
-        self.w = float(0)               # Module weight
-        self.c = []              # List of modules which connect to this module
-        self.ide = ''            # Module identification - name/string
+        self.w = float(0)           # Module weight
+        self.c = []                 # List of modules which connect to
+                                    # this module (list of strings)
+        self.ide = ''               # Module name(string)
 
 class Launch:
 
     def __init__(self):
-        self.date = []                # Date of the launch
-        self.mp = 0                   # Maximum payload of the launch
-        self.fc = 0                   # Fixed cost of the launch
-        self.vc = 0                   # Variable cost of the launch
+        self.date = []              # Date of the launch (date format)
+        self.mp = 0                 # Maximum payload of the launch
+        self.fc = 0                 # Fixed cost of the launch
+        self.vc = 0                 # Variable cost of the launch
 
 class Node:
 
@@ -31,9 +33,9 @@ class Node:
 class State:
 
     def __init__(self):
-        self.present = []            # list of vertices present in space
-        self.manifest = []           # list of vertices that are going in this launch
 
+        self.manifest = []           # list of vertices that are going in this launch
+        self.present=[]
         self.depth_level = 0
         self.launch = Launch() # arranja maneira de meter cada node.state com um unico launch! acho que é mais fácil assim
         #self.launches = []           # list of past launch dates
@@ -42,32 +44,26 @@ class State:
         #self.return2stack = False
 
 class Problem:
-    #initial_state = 0               # First Node state - 0 vertex in space
     l_list = None                   # List of scheduled launches
-    v_list = None                   # List of Modules to launch
-    total_weight = 0
+    v_list = None                   # List of Modules to launch    #initial_state = 0              # First Node state - 0 vertex in space
+    total_weight = 0                # Total weight of vertices to launch
     goal_state = 0                  # Number of vertices in space
 
 
 ###############################################################################
-# reorder_dat
-#   Will reorder the initial file: first the Cask lines, then the Stack lines,
-# and finaly, the Edge lines.. This way, the entries in the input file can
-# appear in any order.
+# order_file
+#   Reorders the initial file: first the vertex lines, then the launch lines,
+# and finaly, the Edge lines.
 # Input: file_name
-# Output: list of strings with each line type ordered (Casks then Stacks then
-#edges)
+# Output: list of strings with each line type ordered
 
 def order_file(file_name):
 
     with open(file_name) as f:
-        # "mini-files", each has only one time of line, eg. s_line on has the
-        #stack lines of the original file
         v_file = []
         e_file = []
         l_file = []
 
-        # stores each mini-file
         for line in f:
 
             if line[0] == 'V':
@@ -91,14 +87,16 @@ def order_file(file_name):
 
 ###############################################################################
 # read_file
-# Function that reads the input file and defines the problem
+#   Function that reads the input file and defines the problem, ordering the
+# launches by date
 # Input: file_name
 # Output: problem
 
 def read_file(file_name):
-    v_list = []     # list of modules (Vertex) with the info of each module
+    v_list = []     # list of modules with the info of each module
     l_list = []     # list of launches (Launch)
     l_aux = Launch()
+    #creates auxiliary launch
     l_aux.date = datetime.date(int(9999), int(12), int(31))
     ordered_file = order_file(file_name)
     l_list.append(l_aux)
@@ -116,7 +114,6 @@ def read_file(file_name):
             v.w = float(words[1])
             # adds it to the cask list
             v_list.append(v)
-            #adicionar aqui verificações extra (repetições, etc)...
 
         elif line[0] == 'E':
             # adds connections to the respective Vertex classes
@@ -125,7 +122,6 @@ def read_file(file_name):
                     v.c.append(words[2])
                 elif v.ide == words[2]:
                     v.c.append(words[1])
-            #adicionar aqui verificações extra (repetições, etc)...
 
         elif line[0] == 'L':
             # initializes the Launch class
@@ -134,46 +130,35 @@ def read_file(file_name):
             l.mp = float(words[2])
             l.fc = float(words[3])
             l.vc = float(words[4])
-            # adds it to the cask list
             l_list.append(l)
-            #adicionar aqui verificações extra (repetições, etc)...
-
 
     # orders launch list by date
     l_list = sorted(l_list, key=lambda item: item.date)
 
     # initializes our Problem
     problem = Problem()
-    #problem.initial_state = 0 #estava comentado lá em cima.....
     problem.v_list = v_list
     problem.l_list = l_list
     sum_w = float(0)
     for vertex in v_list:
         sum_w += vertex.w
     problem.total_weight = sum_w
-    problem.goal_state = len(v_list) # goal state is the number of vertices in space
-    #leva isto depois em consideração, para ele não adicionar quando estiver a explorar o node que não envia nada...
+    problem.goal_state = len(v_list) # number of vertices in space
 
-    #debug - depois apaga/comenta
     print("vertex w c")
     for v in v_list:
         print(v.ide, v.w, v.c)
     print("\nlaunch: date mp fc vc")
     for l in l_list:
         print(l.date, l.mp, l.fc, l.vc)
-    #print("\nproblem:")
-    #print(problem.initial_state, problem.goal_state)# initial_state comentado lá em cima.....
-    #print(problem.goal_state)
-    #print()
-
 
     return problem
 
 ###############################################################################
 # choose_node
-#   choose node to be expanded next according to strategy
+#   Chooses node to be expanded next according to strategy
 # Input: frontier, strategy
-# Output: node - to be expanded next
+# Output: node to be expanded next
 
 def choose_node(frontier, strategy):
 
@@ -185,7 +170,7 @@ def choose_node(frontier, strategy):
 
 ###############################################################################
 # goal_check
-#   function that checks if goal is achieved
+#   Checks if goal is achieved
 # Input: state, problem
 # Output: goal - 1 if achieved, 0 if not
 
@@ -194,7 +179,6 @@ def goal_check(state, problem):
     goal = 0
     if len(state.present)+len(state.manifest) == problem.goal_state:
         goal = 1 # Every component in orbit!
-        #adiciona aqui checks adicionais...
         print("@ goal")
         print_state(state)
     return goal
@@ -202,7 +186,7 @@ def goal_check(state, problem):
 ###############################################################################
 # generate_answer
 #   When the goal is found, the function writes the sequence of actions and cost
-# Input: node - goal node
+# Input: node
 # Output: solution, cost
 
 def generate_answer(node):
@@ -224,6 +208,7 @@ def generate_answer(node):
             for v in node_print.state.manifest:
                 s += v.ide + " "
             s += " "*2
+
             s += str('{0:.6f}'.format(cost_node))
             output.append(s)
         #else:
@@ -233,11 +218,17 @@ def generate_answer(node):
 
     return '\n'.join(reversed(output))
 
-
-
+###############################################################################
+# expand_node
+#   Expands all the possible nodes that are reachable from the current node.
+# Essential part of the program, taking into consideration all the constraints.
+# Only expands a certain node if is not on the frontier  and, in the case it is
+# on the frontier list, chooses the one with the lowest cost.
+# Input: frontier, explored, node_mother, problem, strategy
+# Output: frontier, explored
 def expand_node(frontier, explored, node_mother, problem, strategy):
 
-    if not node_mother.parent_node: # quer dizer que é o primeiro
+    if not node_mother.parent_node:
         # inicializar o node_mother:
         #node_mother.state.launch = copy.deepcopy(problem.l_list[0])
         node_mother.state.launch = problem.l_list[0]
@@ -274,7 +265,7 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #for vert2 in vertex_tl:
     #    print(" ", vert2.ide, end="")
     #print(" ")
-    
+
     vertex_tl = filter_manifest(vertex_tl, node_mother)
     #print("after manifest filter - ",len(vertex_tl))
     #for vert2 in vertex_tl:
@@ -289,7 +280,7 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #print(" ")
 
     con_list = generate_combinations(vertex_tl)
-    
+
     con_list = filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
     #print("after weight filter - ",len(con_list))
 
@@ -320,14 +311,10 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     print("after add_nodes(), but before this node removal:")
     print_frontier(frontier)
     '''
-    
 
     return frontier, explored
 
-
-
-
-# FUNÇÕES ADICIONADAS POR MIM - EMANUEL
+###############################################################################
 
 # aux function to generate all of the possible launch components combinations
 def generate_combinations(v_list):
@@ -357,6 +344,10 @@ def generate_combinations(v_list):
     #print(list_comb)#debug
 
     return list_comb
+
+
+###############################################################################
+
 
 
 def filter_manifest(vertex_tl, node_mother):
@@ -483,10 +474,17 @@ def filter_combinations(con_list, vertex_tl, node_mother, problem):
     input()
     #até aqui, já filtrou .....
 
-    #for 
+    #for
 
     return con_list
 '''
+
+###############################################################################
+# frontier_add_nodes
+#   Adds new nodes to frontier, using the launch combinations previously
+# calculated and the parent nodes.
+# Input: frontier, explored, list_comb, node_mother, problem, strategy
+# Output: (simply modifies the frontier list)
 
 def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem, strategy):
 
@@ -495,43 +493,26 @@ def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem, stra
         state_aux = State()
 
         # populate state
-        #state_aux.present = copy.deepcopy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
-        state_aux.present = copy.copy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
-        for pc in node_mother.state.manifest:# now with the parent one
+        state_aux.present = copy.copy(node_mother.state.present)
+        for pc in node_mother.state.manifest:
             if pc not in state_aux.present:
-                state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
-
-#        for v in problem.v_list:
-#            if v.ide in c[0]:
-#                if v not in state_aux.manifest:
-#                    if c[1] != 0:
-#                        if v not in node_mother.state.present:
-#                            state_aux.manifest.append(v)
+                state_aux.present.append(pc)
 
         for vert_name in c[0]:
             for  verr in problem.v_list:
                 if verr.ide==vert_name:
-                    #print("a")
                     if verr not in node_mother.state.manifest:
-                        #print("b")
                         state_aux.manifest.append(verr)
 
         state_aux.depth_level = node_mother.state.depth_level + 1
         state_aux.launch = problem.l_list[state_aux.depth_level-1]
 
-        #print("state_aux.depth_level = ", state_aux.depth_level)
-        #print("node_mother.state.depth_level = ",node_mother.state.depth_level)
-
-
         # populate node
         node_aux.state = state_aux
         node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
-
-        #node_aux.parent_node = copy.deepcopy(node_mother)
         node_aux.parent_node = node_mother
 
         # determine the h cost, based on strategy
-
         if strategy['search'].__name__ == 'Astar':
             node_aux.h = heur1(node_aux, problem)
             #node_aux.h = heur12(node_aux, problem)
@@ -539,98 +520,5 @@ def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem, stra
             #node_aux.h = heur(node_aux, problem)
         else:
             node_aux.h = 0 #depois: node_aux.h = from_heuristic()
-        #print("h =", str(node_aux.h))
-        #input()
 
-
-        '''
-        #check if node is already in explored
-        if not in_explored(node_aux, explored):
-            frontier.append(node_aux)
-        else:#debug
-            print("node já presente:")#debug
-            for ne in explored:
-                if set(node1.state.manifest) == set(node2.state.manifest) and \
-                    set(node1.state.present) == set(node2.state.present) and \
-                    node1.state.manifest and node2.state.manifest:
-        '''
-        # se calhar isto aqui em cima nem é necessário...
         frontier.append(node_aux)
-
-
-# function that calculates launch cost
-def calculate_cost(launch, manifest, sum_w):
-
-    if manifest:
-        sum_c = launch.fc + launch.vc*sum_w
-    else:
-        sum_c = 0
-
-    return sum_c
-
-
-def print_state(state):
-    print("node.state:")
-    print("present = [",end = "")
-    for vp in state.present:
-        print(vp.ide+",", end = "")
-    print("]")
-    print("manifest = [",end = "")
-    for vm in state.manifest:
-        print(vm.ide+",", end = "")
-    print("]")
-    print("depth =", state.depth_level)
-    print("date =", state.launch.date)
-    print()
-
-
-
-def print_frontier(frontier):
-    print("           frontier = { ", end = "")
-    for nf in frontier:
-        print("(", end = "")
-        print(str(nf.g) + ",", end = "")
-        print("[", end = "")
-        for vm in nf.state.manifest:
-            print(vm.ide + ",", end = "")
-        print("]", end = "")
-        print("[", end = "")
-        for vp in nf.state.present:
-            print(vp.ide + ",", end = "")
-        print("]", nf.state.depth_level, end = "")
-        print("), ", end = "")
-    print("}")
-
-
-
-
-def in_explored(node_aux, explored):
-    already_explored = False
-
-    for ne in explored:
-        if equal_nodes(node_aux, ne):
-            already_explored = True
-
-    return already_explored
-
-
-
-def equal_nodes(node1, node2):
-    are_equal = False
-
-    if set(node1.state.manifest) == set(node2.state.manifest) and \
-        set(node1.state.present) == set(node2.state.present) and \
-        node1.state.manifest and node2.state.manifest:
-        are_equal = True
-
-    return are_equal
-
-'''
-    for vm1 in node1.state.manifest:
-        if vm1.ide not in node2.state.manifest:
-            return False
-
-    for vp1 in node1.state.present:
-        if vp1.ide not in node2.state.present:
-            return False
-'''

@@ -4,16 +4,13 @@ from domain_dependent import *
 
 ######################################################################
 # general_search
-#   function where is implemented the general search algorithm
-#input: problem, strategy
-#output: solution, cost
-
+#   function where the general search algorithm is implemented
+# Input: problem, strategy
+# Output: solution, cost
 def general_search(problem, strategy):
 
     node = Node()                   # defining first node
     #node.state = 0                  # at the start, there is nothing in space
-    # modifiquei a verificação do goal_check() para que isto funcionasse
-    # inicialização feita dentro do expand_node()
 
     frontier = [node]               # list of nodes on the frontier
     explored = []                   # list of nodes explored
@@ -40,7 +37,7 @@ def general_search(problem, strategy):
         else:           # goal not achieved: continue exploring
             # Expand all possible nodes reachable from the current node
             frontier, explored = expand_node(frontier, explored, node, problem, strategy)
-            
+
             #explored.append(copy.deepcopy(node))   # node has now been explored
             explored.append(node)
 
