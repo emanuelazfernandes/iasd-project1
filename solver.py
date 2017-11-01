@@ -3,17 +3,16 @@ import sys
 import time
 
 # User scripts
-from independent_meu import general_search
-from dependent_common_meu_try import *
-from library_uninformed_meu import *
+from domain_independent import general_search
+from domain_dependent import *
+from solver_library import *
 
 ###############################################################################
 # MAIN UNINFORMED
 
 if len(sys.argv) != 3:
     print("Number of arguments is wrong.")
-    print("Usage: python solver_uninformed_meu.py -[u | i] <problem.txt>")
-    #print("Usage: python solver.py -[u | i] <problem.txt>")
+    print("Usage: python solver.py -[u | i] <problem.txt>")
     sys.exit(2)
 
 file_name = sys.argv[2] # input file
@@ -37,8 +36,7 @@ else:
         #blabla(heuristic_info) - não me parece que isto seja necessário...
     else:
         print(sys.argv[1], "is not a recognized flag.")
-        print("Usage: python solver_uninformed_meu.py -[u | i] <problem.txt>")
-        #print("Usage: python solver.py -[u | i] <problem.txt>")
+        print("Usage: python solver.py -[u | i] <problem.txt>")
         sys.exit(3)
 
 print("------------------------------------------------------------------------")

@@ -1,5 +1,5 @@
-from library_uninformed_meu import *
-from dependent_common_meu_try import *
+from solver_library import *
+from domain_dependent import *
 #from utility import *
 
 ######################################################################
