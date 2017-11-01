@@ -18,10 +18,12 @@ if len(sys.argv) != 3:
 file_name = sys.argv[2] # input file
 heuristic_info = sys.argv[1] # if it is informed or uninformed - isto é necessário?
 
-if sys.argv[1] =='-u':
+if sys.argv[1] == '-u':
     problem = read_file(file_name) # Problem statement
 
-    strategy = {'search': uniform_cost, 'heuristic': uninformed_heuristic}
+    #strategy = {'search': uniform_cost, 'heuristic': uninformed_heuristic}
+    strategy = {'search': uniform_cost}
+
     # Chosen uniform cost for uninformed strategy
     # uninformed_heuristic is a dummy function, it will always return 0
     # start_time = time.time()
@@ -31,9 +33,12 @@ if sys.argv[1] =='-u':
     #strategy = {'search': bidirectional, 'heuristic': uninformed_heuristic}
 
 else:
-    if sys.argv[1] =='-i':
-        print("Depois aqui ele vai fazer o informed...")
-        #blabla(heuristic_info) - não me parece que isto seja necessário...
+    if sys.argv[1] == '-i':
+
+        problem = read_file(file_name) # Problem statement
+
+        strategy = {'search': Astar}
+
     else:
         print(sys.argv[1], "is not a recognized flag.")
         print("Usage: python solver.py -[u | i] <problem.txt>")

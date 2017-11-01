@@ -3,6 +3,7 @@ import sys
 import datetime
 import copy
 from itertools import combinations
+from solver_library import *
 
 class Vertex:
 
@@ -44,6 +45,7 @@ class Problem:
     #initial_state = 0               # First Node state - 0 vertex in space
     l_list = None                   # List of scheduled launches
     v_list = None                   # List of Modules to launch
+    total_weight = 0
     goal_state = 0                  # Number of vertices in space
 
 
@@ -145,6 +147,10 @@ def read_file(file_name):
     #problem.initial_state = 0 #estava comentado lá em cima.....
     problem.v_list = v_list
     problem.l_list = l_list
+    sum_w = float(0)
+    for vertex in v_list:
+        sum_w += vertex.w
+    problem.total_weight = sum_w
     problem.goal_state = len(v_list) # goal state is the number of vertices in space
     #leva isto depois em consideração, para ele não adicionar quando estiver a explorar o node que não envia nada...
 
@@ -258,7 +264,8 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #print("")
     #print("")
     #print("Launch - ", problem.l_list[node_mother.state.depth_level].date, problem.l_list[node_mother.state.depth_level].mp)
-    vertex_tl = copy.deepcopy(problem.v_list)# aqui ele precisa MESMO do deepcopy...
+    #vertex_tl = copy.deepcopy(problem.v_list)# aqui ele precisa MESMO do deepcopy...
+    vertex_tl = copy.copy(problem.v_list)# aqui ele precisa MESMO do deepcopy...
     #launch_av = problem.l_list # aqui não será preciso fazer deepcopy?
     search = strategy['search']         # search algorithm to be implemented
 
@@ -308,7 +315,7 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     print_frontier(frontier)
     '''
     # add new created nodes to frontier
-    frontier_add_nodes(frontier, explored, con_list, node_mother,  problem)
+    frontier_add_nodes(frontier, explored, con_list, node_mother, problem, strategy)
     '''
     print("after add_nodes(), but before this node removal:")
     print_frontier(frontier)
@@ -481,14 +488,15 @@ def filter_combinations(con_list, vertex_tl, node_mother, problem):
     return con_list
 '''
 
-def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem):
+def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem, strategy):
 
     for c in list_comb: # c = ('manifest', sum_weight)
         node_aux = Node()
         state_aux = State()
 
         # populate state
-        state_aux.present = copy.deepcopy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
+        #state_aux.present = copy.deepcopy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
+        state_aux.present = copy.copy(node_mother.state.present)# aqui ele precisa MESMO do deepcopy...
         for pc in node_mother.state.manifest:# now with the parent one
             if pc not in state_aux.present:
                 state_aux.present.append(pc)#vê lá se isto não adiciona aos da mãe também.....
@@ -519,9 +527,21 @@ def frontier_add_nodes(frontier, explored, list_comb, node_mother, problem):
         node_aux.state = state_aux
         node_aux.g = node_mother.g + calculate_cost(state_aux.launch, state_aux.manifest, c[1])
 
-        node_aux.h = 0 #depois: node_aux.h = from_heuristic()
         #node_aux.parent_node = copy.deepcopy(node_mother)
         node_aux.parent_node = node_mother
+
+        # determine the h cost, based on strategy
+
+        if strategy['search'].__name__ == 'Astar':
+            node_aux.h = heur1(node_aux, problem)
+            #node_aux.h = heur12(node_aux, problem)
+            #node_aux.h = heur2(node_aux, problem)
+            #node_aux.h = heur(node_aux, problem)
+        else:
+            node_aux.h = 0 #depois: node_aux.h = from_heuristic()
+        #print("h =", str(node_aux.h))
+        #input()
+
 
         '''
         #check if node is already in explored
