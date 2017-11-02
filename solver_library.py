@@ -70,7 +70,7 @@ def heur1(node, problem):
         w_not_launched -= vertex.w
 
     h = node.state.launch.vc * w_not_launched
-
+    
     return h
 
 # another simple heuristic function that calculates the h cost, based on
@@ -91,7 +91,7 @@ def heur12(node, problem):
 
     h = min_vc * w_not_launched#se isto não funcionar, apaga
 
-    return h
+    return h    
 
 
 
@@ -109,58 +109,4 @@ def heur(node):
     return h
 
 
-###############################################################################
-# calculate_cost
-#   Calculates the total cost of a launch from weight o the combination of
-# vertex to be in that launch
-# Input: launch, manifest(vertex to be launched), sum_w(weight of manifest)
-# Output: sum_c (cost of the launch)
-def calculate_cost(launch, manifest, sum_w):
 
-    if manifest:
-        sum_c = launch.fc + launch.vc*sum_w
-    else:
-        sum_c = 0
-
-    return sum_c
-
-###############################################################################
-# print_state
-#   Simply prints some relevant information of a node: vertices in space,
-# vertices to launch, order of the lanch (first,second, etc) and date
-# Imput: state
-# Output: none, but prints the information
-def print_state(state):
-    print("node.state:")
-    print("present = [",end = "")
-    for vp in state.present:
-        print(vp.ide+",", end = "")
-    print("]")
-    print("manifest = [",end = "")
-    for vm in state.manifest:
-        print(vm.ide+",", end = "")
-    print("]")
-    print("depth =", state.depth_level)
-    print("date =", state.launch.date)
-    print()
-
-###############################################################################
-# print_frontier
-#   Prints the possible launch cominations in a more readable way
-# Imput: frontier
-# Output: none, but prints the information
-def print_frontier(frontier):
-    print("           frontier = { ", end = "")
-    for nf in frontier:
-        print("(", end = "")
-        print(str(nf.g) + ",", end = "")
-        print("[", end = "")
-        for vm in nf.state.manifest:
-            print(vm.ide + ",", end = "")
-        print("]", end = "")
-        print("[", end = "")
-        for vp in nf.state.present:
-            print(vp.ide + ",", end = "")
-        print("]", nf.state.depth_level, end = "")
-        print("), ", end = "")
-    print("}")
