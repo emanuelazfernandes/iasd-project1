@@ -348,13 +348,13 @@ def generate_combinations(v_list):
 
 
 ##############################################################################################
-##################       FIM DO NOVO generate_combinations()      ############################
+##################    ÍNICIO DO NOVO generate_combinations()      ############################
 ##############################################################################################
 
 
 
 
-
+'''
 # aux function to generate all of the possible launch components combinations
 def generate_combinations(v_list, present, problem):
 
@@ -443,11 +443,13 @@ def generate_combinations(v_list, present, problem):
                     input()
 
                 if k == 4:
+
                     for edge in edges:#edge = 'VK'
+
                         if edge in aux:
-                            #print("aux =", aux, "|", "edge =", edge)
+                            print("aux =", aux, "|", "edge =", edge)
                             #print("oi?!")
-                            #input()
+                            input()
                             continue
 
                         aux2 = copy.copy(aux)#shallow copy
@@ -463,15 +465,18 @@ def generate_combinations(v_list, present, problem):
 
                                 if new_edge in aux2:
                                     print("ups, este está repetido:")
-                                    print("new_edge =", new_edge, "| aux2 =", end = "")
-                                    print(aux2)
+                                    #print("new_edge =", new_edge, "| aux2 =", end = "")
+                                    print("aux2 =", end = "")
+                                    print(aux2, end = "")
+                                    print(" | new_edge =", new_edge)
                                     input()
                                     continue
                                 comb = copy.copy(aux2)#shallow copy
                                 comb.append(new_edge)
+                                print("aux2 =", end = "")
+                                print(aux2, end = "")
+                                print(" | new_edge =", new_edge)
                                 print("comb =", comb)
-                                print("new_edge =", new_edge)
-                                print("aux2 =", aux2)
                                 #input()
                                 if comb_present(comb, list_comb):
                                     print("ups, esta já existe:", end = '')
@@ -486,17 +491,17 @@ def generate_combinations(v_list, present, problem):
                                 print_comb(list_comb)
                                 print("k =",k)
                                 input()
-
-                if k == 9:
-                    #completa esta merda!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    comb = [v.ide]
-                    if comb_present(comb, list_comb):
-                    sum_w = float(0)
-                    for cw in comb:
-                        sum_w += list_V[cw]
-                    comb_tup = (comb, sum_w)
-                    list_comb.append(comb_tup)
-
+                
+                #if k == 9:
+                #    #completa esta merda!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                #   comb = [v.ide]
+                #    if comb_present(comb, list_comb):
+                #    sum_w = float(0)
+                #    for cw in comb:
+                #       sum_w += list_V[cw]
+                #    comb_tup = (comb, sum_w)
+                #    list_comb.append(comb_tup)
+                
                         
         #agora que geramos, vamos eliminar repetidas!
     print_comb(list_comb)
@@ -531,15 +536,112 @@ def comb_present(comb, list_comb):
             break
     #se não encontrou retorna False; se encontrou retorna True
     return is_present
-
-
-
-
+'''
 
 
 ##############################################################################################
 ##################       FIM DO NOVO generate_combinations()      ############################
 ##############################################################################################
+
+
+
+
+
+
+
+
+def generate_combinations(v_list, present, problem):
+    list_V = {} # aux dict: #{'VCM' = 20.4, 'VDM' = ...}
+    for v in v_list:
+        list_V[v.ide] = v.w
+
+    list_comb = []
+    list_comb.append(([],0))# adicionamos manualmente o lançamento vazio
+
+    if present:
+        print("not yet (for present)!")
+    else:
+        for v in v_list:
+
+            #tratar como um simples search
+            node = [v.ide, [], 0]# component, parent, depth_inicial
+
+            frontier = [node]
+            explored = []
+
+            while True:
+                if not frontier:
+                    #chegamos ao fim!
+                    print("chegamos ao fim deste search!")
+                    break
+
+                next_nodes = expand_node_simple(node, v_list, problem, explored)
+                for nn in next_nodes:
+                    frontier.append(nn)
+
+                explored.append(copy.copy(node))#depois testa se sem isto funciona na mesma...
+                node = frontier.pop()
+
+
+            #chegou ao fim do search, vamos ordenar o explored por depth
+            explored.sort(key = lambda x: x[2])
+            # continuar aqui, e gerar as combinações...
+            # faz isto de uma maneira inteligente!
+
+
+
+    return list_comb
+
+
+
+def expand_node_simple(node, v_list, problem, explored):
+    next_nodes = []
+
+    edges = return_edges(problem, node[0])
+    for e in edges:
+
+        edge_in_explored = False
+        for node_explored in explored:
+            if e == node_explored[0]:
+                edge_in_explored = True
+                break#para não ter nodes repetidos...
+        if edge_in_explored:
+            continue#para não ter nodes repetidos...
+
+        new_node = ['', [], 0]
+
+        new_node[0] = e
+        new_node[1] = copy.copy(node)
+        new_node[2] = node[2] + 1 # incrementa o depth
+
+        next_nodes.append(new_node)
+
+    return next_nodes
+
+
+
+def return_edges(problem, vertex_str):#vertex: vertex.ide = 'VDM'
+    for ve in problem.v_list:#vamos ver agora todos os vizinhos do 'VDM'
+        if ve.ide == vertex_str:
+            edges = ve.c#edges tem agora uma lista de string com os vizinhos de VDM: ['VK']
+            break#já encontramos; poupar ciclos
+    return edges
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
