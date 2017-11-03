@@ -45,9 +45,11 @@ class State:
 
 class Problem:
     l_list = None                   # List of scheduled launches
-    v_list = None                   # List of Modules to launch    #initial_state = 0              # First Node state - 0 vertex in space
+    v_list = set()                   # List of Modules to launch    #initial_state = 0              # First Node state - 0 vertex in space
     total_weight = 0                # Total weight of vertices to launch
     goal_state = 0                  # Number of vertices in space
+    def v_list(self):
+        return set(self.v_list)
 
 
 ###############################################################################
@@ -273,44 +275,35 @@ def expand_node(frontier, explored, node_mother, problem, strategy):
     #print(" ")
 
 
-
-    #vertex_tl = filter_edges(vertex_tl, node_mother, problem)####################################################
-    #for vert2 in vertex_tl:
-    #    print(" ", vert2.ide, end="")
-    #print(" ")
-
     con_list = generate_combinations(vertex_tl)
 
     con_list = filter_weight(con_list, problem.l_list[node_mother.state.depth_level].mp)
     #print("after weight filter - ",len(con_list))
 
+    graph=[]
+    if len(vertex_tl)!=len(problem.v_list):
+        graph=node_mother.state.manifest+node_mother.state.present
+    #print(len(con_list))
 
-    #print(problem.l_list[node_mother.state.depth_level].mp)
-    #for comb in con_list:
-    #    print(" ", comb, end="")
-    '''
-    for comb in con_list:
-        if comb[1] == 0:
-            con_list.remove(comb)
-    '''
-    ########################con_list = filter_combinations(con_list, vertex_tl, node_mother, problem)
+    for con in con_list:
+        for vert_string in con[0]:
+            for vert in problem.v_list:
+                if vert_string==vert.ide:
+                    graph.append(vert)
+                    # Put all the nodes together in one big set.
+        nodes = set(graph)
+                    # Find all the connected components.
 
-    '''
-    print("node_g =", node_mother.g, end = ", ")
-    print("manifest =", end = "[")
-    for v in node_mother.state.manifest:
-        print(v.ide, end = ",")
-    print("]")
-    print("node_depth =", node_mother.state.depth_level)
-    print("before add_nodes():")
-    print_frontier(frontier)
-    '''
+        for components in connected_components(nodes, problem):
+            if len(components)!=len(nodes):
+                con_list.remove(con)
+                continue
+
+    #print(con_list)
+    #print(" ")
     # add new created nodes to frontier
     frontier_add_nodes(frontier, explored, con_list, node_mother, problem, strategy)
-    '''
-    print("after add_nodes(), but before this node removal:")
-    print_frontier(frontier)
-    '''
+
 
     return frontier, explored
 
@@ -415,69 +408,53 @@ def filter_weight(list_comb, launch_weight):
     #print()#debug
     return(list_comb)
 
-'''
-def filter_combinations(con_list, vertex_tl, node_mother, problem):
+###############################################################################
+# connected_components
+#   Helps check if there are any unconected nodes in a graph
+# Input: set of vertex, problem
+# Output: List of groups of nodes (several if unconected vertex, one if conn.)
+def connected_components(nodes, problem):
 
-    outer_ring = []
+    # List of connected components found. The order is random.
+    result = []
 
-    for c_tup in con_list:
-        #c_tup = (['VK1','VS','VSTM'],6.9)
-        comb = c_tup[0]
-        #comb tem agora a lista de strings desta combinação => ['VK1','VS','VSTM']
-        if len(comb) < 2:
-            continue#só estamos interessados em eliminar aqueles que têm pelo menos 2 componentes, pois o objectivo aqui é verificar se vão ficar conectados no espaço...
-        for n_vide in range(0, len(comb)):
-            vide = comb[n_vide]
-            #vide contem agora o v.ide da comb => 'VK1'
-            for v_orig in problem.v_list#procurar os edges do VK1
-                if v_orig.ide == vide:
-                    edges = v_orig.c
-            #edges contem agora ['VPM','VCM'], uma lista de strings!!!
-            comb_others = comb[:n_vide] + comb[n_vide+1:]
-            #comb_others contem agora todos os outros da comb que não o vide => ['VS','VSTM']
+    # Make a copy of the set, so we can modify it.
+    nodes = set(nodes)
 
-            for co in comb_others:
-                if co not in edges:
-                    blabla
-'''
-    #percorrer as combinações 1 por 1, e ver se há pelo menos 1 desconexão!
-    #se houver, essa combinação salta fora!
+    # Iterate while we still have nodes to process.
+    while nodes:
 
+        # Get a random node and remove it from the global set.
+        n = nodes.pop()
+        # This set will contain the next group of nodes connected to each other.
+        group = {n}
+        # Build a queue with this node in it.
+        queue = [n]
+        # Iterate the queue.
+        # When it's empty, we finished visiting a group of connected nodes.
+        while queue:
+            # Consume the next item from the queue.
+            n = queue.pop(0)
+            # Fetch the neighbors.
+            listaa=[]
+            for vertex in problem.v_list:
+                for conn in n.c:
+                    if conn==vertex.ide:
+                        listaa.append(vertex)
 
-'''
-    print(con_list)
-
-    possible_vertex_conn_str = []
-
-    vertex_in_space = node_mother.state.present + node_mother.state.manifest
-    for v in vertex_in_space:
-        print("     ", v.ide, end = "")
-    print("caralho")
-
-    for vertex in vertex_in_space:
-        for conn in vertex.c:
-            if conn not in possible_vertex_conn_str:
-                possible_vertex_conn_str.append(conn)
-    print(possible_vertex_conn_str)
-
-    if not vertex_in_space:
-        possible_vertex_conn_str=[]
-        for vertex in problem.v_list:
-            possible_vertex_conn_str.append(vertex.ide)
-    print(possible_vertex_conn_str)
-
-    for combi in con_list:
-        if len(combi[0])==1:
-            if combi[0] not in possible_vertex_conn_str:
-                con_list.remove(combi)
-    print(con_list)
-    input()
-    #até aqui, já filtrou .....
-
-    #for
-
-    return con_list
-'''
+            neighbors =set(listaa)
+            # Remove the neighbors we already visited.
+            neighbors.difference_update(group)
+            # Remove the remaining nodes from the global set.
+            nodes.difference_update(neighbors)
+            # Add them to the group of connected nodes.
+            group.update(neighbors)
+            # Add them to the queue, so we visit them in the next iterations.
+            queue.extend(neighbors)
+        # Add the group to the list of groups.
+        result.append(group)
+    # Return the list of groups.
+    return result
 
 ###############################################################################
 # frontier_add_nodes
